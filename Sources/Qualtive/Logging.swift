@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-@available(iOS 10.0, *)
+@available(iOS 10.0, OSX 10.12, tvOS 10.0, watchOS 3.0, *)
 extension OSLog {
 
     static let qualtive = OSLog(subsystem: Bundle.main.bundleIdentifier ?? "", category: "qualtive")
@@ -9,7 +9,7 @@ extension OSLog {
 
 func logHintNewVersion() {
     let text: StaticString = "There may be a new version of the Qualtive Client Library - Swift. Please update to get the latest features and fixes."
-    if #available(iOS 10.0, *) {
+    if #available(iOS 10.0, OSX 10.12, tvOS 10.0, watchOS 3.0, *) {
         os_log(text, log: .qualtive)
     } else {
         NSLog("Qualtive: " + String(describing: text))
