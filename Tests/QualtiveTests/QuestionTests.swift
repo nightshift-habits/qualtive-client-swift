@@ -251,4 +251,26 @@ final class QuestionTests: XCTestCase {
 
         waitForExpectations(timeout: 5)
     }
+
+    func testFetchConnectionError() {
+        let expectation = self.expectation(description: "Fetch")
+
+        Question.fetch(collection: ("ci-test", "not-found"), options: .init(_remoteURLString: "https://does-not-exists.qualtive.io/")) { result in
+            expectation.fulfill()
+
+            switch result {
+            case .failure(let error):
+                switch error {
+                case .connection:
+                    break
+                default:
+                    XCTFail("\(error)")
+                }
+            case .success(let question):
+                XCTFail("Expected not found error: \(question)")
+            }
+        }
+
+        waitForExpectations(timeout: 5)
+    }
 }
