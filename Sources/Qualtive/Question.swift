@@ -66,7 +66,7 @@ public struct Question {
         guard let name = root["name"] as? String else {
             throw ParseError(debugMessage: "Name is not string")
         }
-        guard let rawContent = root["content"] as? [[String: String]] else {
+        guard let rawContent = root["content"] as? [[String: Any]] else {
             throw ParseError(debugMessage: "Content is not array of objects")
         }
 
