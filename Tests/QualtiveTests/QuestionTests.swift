@@ -151,7 +151,7 @@ final class QuestionTests: XCTestCase {
         do {
             _ = try Question(json: [
                 "id": "question-id",
-                "name": 1,
+                "name": "Question Name",
                 "content": [1, 2, 3],
             ])
         } catch { return }
