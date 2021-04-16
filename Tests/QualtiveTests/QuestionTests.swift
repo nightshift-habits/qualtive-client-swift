@@ -4,8 +4,21 @@ import XCTest
 final class QuestionTests: XCTestCase {
 
     static var allTests = [
+        ("testDecodeNoContent", testDecodeNoContent),
+        ("testDecodeContentTitle", testDecodeContentTitle),
+        ("testDecodeContentScore", testDecodeContentScore),
+        ("testDecodeContentText", testDecodeContentText),
+        ("testDecodeContentTextNoPlaceholder", testDecodeContentTextNoPlaceholder),
+        ("testDecodeContentFuture", testDecodeContentFuture),
+        ("testDecodeInvalid", testDecodeInvalid),
+        ("testDecodeInvalidId", testDecodeInvalidId),
+        ("testDecodeInvalidName", testDecodeInvalidName),
+        ("testDecodeInvalidContent", testDecodeInvalidContent),
+        ("testDecodeInvalidContentType", testDecodeInvalidContentType),
+        ("testDecodeInvalidContentTitleText", testDecodeInvalidContentTitleText),
         ("testFetchSuccess", testFetchSuccess),
         ("testFetchNotFound", testFetchNotFound),
+        ("testFetchConnectionError", testFetchConnectionError),
     ]
 
     // MARK: Decode
