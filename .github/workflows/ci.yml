@@ -1,0 +1,73 @@
+name: CI
+
+on: push
+
+env:
+  XCODE_VERSION: "12.4"
+  IOS_VERSION: "14.4"
+  TVOS_VERSION: "14.3"
+
+jobs:
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - name: xcode-select
+        run: "sudo xcode-select -s /Applications/Xcode_$XCODE_VERSION.app"
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Test
+        run: swift test --enable-code-coverage
+      - name: Convert code coverage
+        run: xcrun llvm-cov export -format="lcov" .build/debug/QualtivePackageTests.xctest/Contents/MacOS/QualtivePackageTests -instr-profile .build/debug/codecov/default.profdata > info.lcov
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-ios:
+    runs-on: macos-latest
+    steps:
+      - name: xcode-select
+        run: "sudo xcode-select -s /Applications/Xcode_$XCODE_VERSION.app"
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Generate Xcode project
+        run: swift package generate-xcodeproj
+      - name: Test
+        run: xcodebuild test -scheme Qualtive-Package -destination 'platform=iOS Simulator,name=iPhone 8,OS='"$IOS_VERSION"
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-ipados:
+    runs-on: macos-latest
+    steps:
+      - name: xcode-select
+        run: "sudo xcode-select -s /Applications/Xcode_$XCODE_VERSION.app"
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Generate Xcode project
+        run: swift package generate-xcodeproj
+      - name: Test
+        run: xcodebuild test -scheme Qualtive-Package -destination 'platform=iOS Simulator,name=iPad (8th generation),OS='"$IOS_VERSION"
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-tvos:
+    runs-on: macos-latest
+    steps:
+      - name: xcode-select
+        run: "sudo xcode-select -s /Applications/Xcode_$XCODE_VERSION.app"
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Generate Xcode project
+        run: swift package generate-xcodeproj
+      - name: Test
+        run: xcodebuild test -scheme Qualtive-Package -destination 'platform=tvOS Simulator,name=Apple TV,OS='"$TVOS_VERSION"
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
