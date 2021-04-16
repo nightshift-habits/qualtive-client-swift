@@ -21,7 +21,7 @@ public struct Question {
             case "score": self = .score(try .init(json: json))
             case "text":  self = .text (try .init(json: json))
             default:
-                // TODO: Log to developers and hint about updated version
+                logHintNewVersion()
                 return nil
             }
         }
