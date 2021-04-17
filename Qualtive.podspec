@@ -1,15 +1,12 @@
 Pod::Spec.new do |spec|
 
-  spec.name         = "qualtive"
+  spec.name         = "Qualtive"
   spec.version      = "1.0.0"
   spec.summary      = "Qualtive Client Library for Swift."
   spec.author       = { "Qualtive" => "support@qualtive.io" }
   spec.homepage     = "https://qualtive.io"
+  spec.description  = "The Qualtive client library for Swift adds support for sending feedback from your native app on Apple platforms to [Qualtive](qualtive.io)."
   # spec.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
-
-  spec.description  = <<-DESC
-The Qualtive client library for Swift adds support for sending feedback from your native app on Apple platforms to [Qualtive](qualtive.io).
-DESC
 
   spec.swift_version = "5.3"
 
