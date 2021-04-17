@@ -4,11 +4,24 @@
 
 ### Using Swift Package Manager
 
-TODO: Describe
+Add the following to your Package.swift:
+```
+dependencies: [
+  .package(name: "Qualtive", url: "https://github.com/nightshift-habits/qualtive-client-swift.git", from: "1.0.0"),
+]
+```
 
-### Using Swift Package Manager
+If you are using Xcode, you can use ”Add Package Dependency…” from the menu bar and specify the following:
+```
+https://github.com/nightshift-habits/qualtive-client-swift.git
+```
 
-TODO: Describe
+### Using CocoaPods
+
+Add the following to your Podifle and then run `pod install` in the terminal:
+```
+pod 'Qualtive', '~> 1.1'
+```
 
 ## Usage
 
