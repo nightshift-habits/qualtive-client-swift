@@ -78,23 +78,15 @@ public struct Question {
     // MARK: - Fetch
 
     public enum FetchError: Error {
-        case connection(Error)
         case notFound
-        case cancelled
-        case unexpected(Error)
-        case remoteMaintenance
-    }
-
-    public struct FetchOptions {
-
-        public let _remoteURLString: String?
+        case general(GeneralNetworkError)
     }
 
     public static func fetch(collection: Collection, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
         fetch(collection: collection, options: .init(_remoteURLString: nil), completion: completion)
     }
 
-    static func fetch(collection: Collection, options: FetchOptions, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
+    static func fetch(collection: Collection, options: PrivateOptions, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
         var urlComponents = URLComponents(string: options._remoteURLString ?? Configuration.remoteURLString)!
         urlComponents.path = "/feedback/questions/\(collection.questionId)/"
 
@@ -114,7 +106,7 @@ public struct Question {
                         }
                     } catch {
                         DispatchQueue.main.async {
-                            completion?(.failure(.unexpected(error)))
+                            completion?(.failure(.general(.unexpected(error))))
                         }
                     }
                 case 404:
@@ -123,21 +115,21 @@ public struct Question {
                     }
                 case 503:
                     DispatchQueue.main.async {
-                        completion?(.failure(.unexpected(UnexpectedError.remoteMaintenance)))
+                        completion?(.failure(.general(.unexpected(UnexpectedError.remoteMaintenance))))
                     }
                 default:
                     DispatchQueue.main.async {
-                        completion?(.failure(.unexpected(UnexpectedError.httpStatusCode(response.statusCode))))
+                        completion?(.failure(.general(.unexpected(UnexpectedError.httpStatusCode(response.statusCode)))))
                     }
                 }
 
             } else if let error = connectionError {
                 DispatchQueue.main.async {
-                    completion?(.failure(.connection(error)))
+                    completion?(.failure(.general(.connection(error))))
                 }
             } else {
                 DispatchQueue.main.async {
-                    completion?(.failure(.cancelled))
+                    completion?(.failure(.general(.cancelled)))
                 }
             }
         }

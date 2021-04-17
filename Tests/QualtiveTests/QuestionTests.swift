@@ -274,7 +274,7 @@ final class QuestionTests: XCTestCase {
             switch result {
             case .failure(let error):
                 switch error {
-                case .connection:
+                case .general(.connection):
                     break
                 default:
                     XCTFail("\(error)")
