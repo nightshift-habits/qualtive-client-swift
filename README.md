@@ -73,3 +73,15 @@ Qualtive.Entry.post(to: ("my-company", "my-question"), content: [
   "Age": "32",
 ])
 ```
+
+## Supported platforms
+
+The following platforms are officially supported:
+
+- iOS
+- iPadOS
+- macOS
+- tvOS
+- watchOS
+
+This library should also be able to run on Linux and other Swift-supported platforms, but these are not offically supported.
