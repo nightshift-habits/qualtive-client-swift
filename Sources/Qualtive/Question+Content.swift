@@ -10,6 +10,7 @@ extension Question {
     /// - `text`: Free-form text input. User can type whatever text he/she wants.
     /// - `select`: Single select/radio button input. User can select one of many possible pre-defined options.
     /// - `multiselect`: Multi-select/checkbox buttons input. User can select on or many of possible pre-defined options.
+    /// - `attachments`: Attachments/files input.
     public enum Content {
 
         /// Static title to display to the user. Not user interactable.
@@ -27,6 +28,9 @@ extension Question {
         /// Multi-select/checkbox buttons input. User can select on or many of possible pre-defined options.
         case multiselect(MultiselectContent)
 
+        /// Attachments/files input.
+        case attachments(AttachmentsContent)
+
         init?(json: [String: Any]) throws {
             guard let type = json["type"] as? String else {
                 throw ParseError(debugMessage: "Type is not string")
@@ -38,6 +42,7 @@ extension Question {
             case "text": self = .text(try .init(json: json))
             case "select": self = .select(try .init(json: json))
             case "multiselect": self = .multiselect(try .init(json: json))
+            case "attachments": self = .attachments(try .init(json: json))
             default:
                 logHintNewVersion()
                 return nil
@@ -123,5 +128,13 @@ extension Question {
         init() {
             self.options = []
         }
+    }
+
+    /// Attachments/files input.
+    public struct AttachmentsContent {
+
+        init(json: [String: Any]) throws {}
+
+        init() {}
     }
 }

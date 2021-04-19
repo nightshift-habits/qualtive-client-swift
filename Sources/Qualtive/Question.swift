@@ -24,6 +24,7 @@ public struct Question {
             case .text(let content): return Entry.Content.text(.init(questionContent: content))
             case .select(let content): return Entry.Content.select(.init(questionContent: content))
             case .multiselect(let content): return Entry.Content.multiselect(.init(questionContent: content))
+            case .attachments(let content): return Entry.Content.attachments(.init(questionContent: content))
             }
         }
     }

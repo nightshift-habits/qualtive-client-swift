@@ -26,6 +26,9 @@ extension Entry {
 
         /// Multi-select/checkbox buttons input. User can select on or many of possible pre-defined options.
         case multiselect(MultiselectContent)
+
+        /// Attachments/files input.
+        case attachments(AttachmentsContent)
     }
 
     /// Static title that was displayed to the user. Not user interactable.
@@ -146,6 +149,30 @@ extension Entry {
         /// Initialize content without any/empty question definition.
         /// - Parameter values: Selected user values. Set to empty array, when no option was selected.
         public init(values: [String]) {
+            self.definition = .init()
+            self.values = values
+        }
+    }
+
+    /// Attachments/files input.
+    public struct AttachmentsContent {
+
+        /// Source definition of the content from the question.
+        public let definition: Question.AttachmentsContent
+
+        /// Selected user values. Set to empty array, when no option was selected.
+        public var values: [Attachment]
+
+        /// Initialize content from an existing question content.
+        /// - Parameter questionContent: The existing question content.
+        public init(questionContent: Question.AttachmentsContent) {
+            self.definition = questionContent
+            self.values = []
+        }
+
+        /// Initialize content without any/empty question definition.
+        /// - Parameter values: Selected user values. Set to empty array, when no option was selected.
+        public init(values: [Attachment]) {
             self.definition = .init()
             self.values = values
         }

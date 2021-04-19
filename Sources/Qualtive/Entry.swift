@@ -21,7 +21,7 @@ public struct Entry {
         self.id = id
     }
 
-    // MARK: - Fetch
+    // MARK: - Post
 
     public enum PostError: Error {
         case questionNotFound
@@ -74,6 +74,9 @@ public struct Entry {
                 case .multiselect(let content):
                     raw["type"] = "multiselect"
                     raw["values"] = content.values
+                case .attachments(let content):
+                    raw["type"] = "attachments"
+                    raw["values"] = content.values.map { $0.id }
                 }
                 return raw
             },
