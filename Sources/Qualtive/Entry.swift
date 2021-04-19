@@ -8,6 +8,8 @@ public struct Entry {
         case title(TitleContent)
         case score(ScoreContent)
         case text(TextContent)
+        case select(SelectContent)
+        case multiselect(MultiselectContent)
     }
 
     public struct TitleContent {
@@ -44,6 +46,24 @@ public struct Entry {
                 fatalError("Score value must be between or equal to 0 and 100")
             }
             self.init(value: value.flatMap { UInt8($0) })
+        }
+    }
+
+    public struct SelectContent {
+
+        public var value: String?
+
+        public init(value: String?) {
+            self.value = value
+        }
+    }
+
+    public struct MultiselectContent {
+
+        public var values: [String]
+
+        public init(values: [String]) {
+            self.values = values
         }
     }
 
@@ -100,6 +120,12 @@ public struct Entry {
                 case .text(let content):
                     raw["type"] = "text"
                     if let value = content.value { raw["value"] = value }
+                case .select(let content):
+                    raw["type"] = "select"
+                    if let value = content.value { raw["value"] = value }
+                case .multiselect(let content):
+                    raw["type"] = "multiselect"
+                    raw["values"] = content.values
                 }
                 return raw
             },

@@ -45,6 +45,8 @@ final class EntryTests: XCTestCase {
         Entry.post(to: ("ci-test", "swift"), content: [
             .score(.init(value: 75)),
             .text(.init(value: "Hello world!")),
+            .select(.init(value: "Selected")),
+            .multiselect(.init(values: ["Multi 1", "Multi 2"])),
         ], user: User(id: "ci-swift"), customAttributes: ["Age": "23"]) { result in
             expectation.fulfill()
 

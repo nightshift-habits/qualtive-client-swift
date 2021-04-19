@@ -9,6 +9,8 @@ final class QuestionTests: XCTestCase {
         ("testDecodeContentScore", testDecodeContentScore),
         ("testDecodeContentText", testDecodeContentText),
         ("testDecodeContentTextNoPlaceholder", testDecodeContentTextNoPlaceholder),
+        ("testDecodeContentSelect", testDecodeContentSelect),
+        ("testDecodeContentMultiselect", testDecodeContentMultiselect),
         ("testDecodeContentFuture", testDecodeContentFuture),
         ("testDecodeInvalid", testDecodeInvalid),
         ("testDecodeInvalidId", testDecodeInvalidId),
@@ -114,6 +116,48 @@ final class QuestionTests: XCTestCase {
             XCTAssertNil(content.placeholder)
         default:
             XCTFail("Expected content to be text: \(content)")
+        }
+    }
+
+    func testDecodeContentSelect() throws {
+        let result = try Question(json: [
+            "id": "question-id",
+            "name": "Question Name",
+            "content": [[
+                "type": "select",
+                "options": ["A", "B", "C"],
+            ]],
+        ])
+        XCTAssertEqual(result.id, "question-id")
+        XCTAssertEqual(result.name, "Question Name")
+        XCTAssertEqual(result.content.count, 1)
+        let content = try XCTUnwrap(result.content.first)
+        switch content {
+        case .select(let content):
+            XCTAssertEqual(content.options, ["A", "B", "C"])
+        default:
+            XCTFail("Expected content to be select: \(content)")
+        }
+    }
+
+    func testDecodeContentMultiselect() throws {
+        let result = try Question(json: [
+            "id": "question-id",
+            "name": "Question Name",
+            "content": [[
+                "type": "multiselect",
+                "options": ["1", "2", "3"],
+            ]],
+        ])
+        XCTAssertEqual(result.id, "question-id")
+        XCTAssertEqual(result.name, "Question Name")
+        XCTAssertEqual(result.content.count, 1)
+        let content = try XCTUnwrap(result.content.first)
+        switch content {
+        case .multiselect(let content):
+            XCTAssertEqual(content.options, ["1", "2", "3"])
+        default:
+            XCTFail("Expected content to be multiselect: \(content)")
         }
     }
 

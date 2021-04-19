@@ -10,6 +10,8 @@ public struct Question {
         case title(TitleContent)
         case score(ScoreContent)
         case text(TextContent)
+        case select(SelectContent)
+        case multiselect(MultiselectContent)
 
         init?(json: [String: Any]) throws {
             guard let type = json["type"] as? String else {
@@ -19,7 +21,9 @@ public struct Question {
             switch type {
             case "title": self = .title(try .init(json: json))
             case "score": self = .score(try .init(json: json))
-            case "text":  self = .text (try .init(json: json))
+            case "text": self = .text(try .init(json: json))
+            case "select": self = .select(try .init(json: json))
+            case "multiselect": self = .multiselect(try .init(json: json))
             default:
                 logHintNewVersion()
                 return nil
@@ -52,6 +56,32 @@ public struct Question {
     public struct ScoreContent {
 
         init(json: [String: Any]) throws {}
+    }
+
+    public struct SelectContent {
+
+        let options: [String]
+
+        init(json: [String: Any]) throws {
+            guard let options = json["options"] as? [String] else {
+                throw ParseError(debugMessage: "Select options is not array of strings")
+            }
+
+            self.options = options
+        }
+    }
+
+    public struct MultiselectContent {
+
+        let options: [String]
+
+        init(json: [String: Any]) throws {
+            guard let options = json["options"] as? [String] else {
+                throw ParseError(debugMessage: "Multiselect options is not array of strings")
+            }
+
+            self.options = options
+        }
     }
 
     // MARK: - JSON
