@@ -76,7 +76,7 @@ public struct Entry {
                     raw["values"] = content.values
                 case .attachments(let content):
                     raw["type"] = "attachments"
-                    raw["values"] = content.values.map { $0.id }
+                    raw["values"] = content.values.map { ["id": $0.id] }
                 }
                 return raw
             },

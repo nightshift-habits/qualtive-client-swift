@@ -37,7 +37,7 @@ public struct Attachment {
         case general(GeneralNetworkError)
     }
 
-    public static func create(from upload: Upload, completion: ((Result<Attachment, UploadError>) -> Void)? = nil) {
+    public static func create(from upload: Upload, to containerId: String, completion: ((Result<Attachment, UploadError>) -> Void)? = nil) {
         var urlComponents = URLComponents(string: Configuration.remoteURLString)!
         urlComponents.path = "/feedback/attachments/"
 
@@ -52,6 +52,7 @@ public struct Attachment {
             ]
         }
 
+        urlRequest.addValue(containerId, forHTTPHeaderField: "X-Container")
         urlRequest.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try! JSONSerialization.data(withJSONObject: body)
 
