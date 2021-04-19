@@ -1,86 +1,30 @@
 import Foundation
 
+/// Question defined on Qualtive on how an created entry's content should be defined.
 public struct Question {
 
+    /// Identifier of the question. Can also be used as a slug.
     public let id: String
+
+    /// Name of the question.
     public let name: String
+
+    /// Content and struction of the question.
     public let content: [Content]
 
-    public enum Content {
-        case title(TitleContent)
-        case score(ScoreContent)
-        case text(TextContent)
-        case select(SelectContent)
-        case multiselect(MultiselectContent)
-
-        init?(json: [String: Any]) throws {
-            guard let type = json["type"] as? String else {
-                throw ParseError(debugMessage: "Type is not string")
+    /// Creates default/empty array of entry content; ready to be filled out by user.
+    /// - Returns: Array of entry content without any pre-defined values.
+    ///
+    /// Note: This method only maps the question content to entry content. It is safe to asume the length of booth content will always be equal.
+    public func entryContentTemplate() -> [Entry.Content] {
+        content.map {
+            switch $0 {
+            case .title(let content): return Entry.Content.title(.init(questionContent: content))
+            case .score(let content): return Entry.Content.score(.init(questionContent: content))
+            case .text(let content): return Entry.Content.text(.init(questionContent: content))
+            case .select(let content): return Entry.Content.select(.init(questionContent: content))
+            case .multiselect(let content): return Entry.Content.multiselect(.init(questionContent: content))
             }
-
-            switch type {
-            case "title": self = .title(try .init(json: json))
-            case "score": self = .score(try .init(json: json))
-            case "text": self = .text(try .init(json: json))
-            case "select": self = .select(try .init(json: json))
-            case "multiselect": self = .multiselect(try .init(json: json))
-            default:
-                logHintNewVersion()
-                return nil
-            }
-        }
-    }
-
-    public struct TitleContent {
-
-        let text: String
-
-        init(json: [String: Any]) throws {
-            guard let text = json["text"] as? String else {
-                throw ParseError(debugMessage: "Text is not string")
-            }
-
-            self.text = text
-        }
-    }
-
-    public struct TextContent {
-
-        let placeholder: String?
-
-        init(json: [String: Any]) throws {
-            self.placeholder = json["placeholder"] as? String
-        }
-    }
-
-    public struct ScoreContent {
-
-        init(json: [String: Any]) throws {}
-    }
-
-    public struct SelectContent {
-
-        let options: [String]
-
-        init(json: [String: Any]) throws {
-            guard let options = json["options"] as? [String] else {
-                throw ParseError(debugMessage: "Select options is not array of strings")
-            }
-
-            self.options = options
-        }
-    }
-
-    public struct MultiselectContent {
-
-        let options: [String]
-
-        init(json: [String: Any]) throws {
-            guard let options = json["options"] as? [String] else {
-                throw ParseError(debugMessage: "Multiselect options is not array of strings")
-            }
-
-            self.options = options
         }
     }
 
@@ -112,6 +56,10 @@ public struct Question {
         case general(GeneralNetworkError)
     }
 
+    /// Fetch a question and it's definition from qualtive.io.
+    /// - Parameters:
+    ///   - collection: The collection identifier for the question.
+    ///   - completion: Closure that is called with the result of the operation. Called on the main thread.
     public static func fetch(collection: Collection, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
         fetch(collection: collection, options: .init(_remoteURLString: nil), completion: completion)
     }

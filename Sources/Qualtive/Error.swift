@@ -10,9 +10,18 @@ enum UnexpectedError: Error {
     case httpStatusCode(Int)
 }
 
+/// General network error. In most cases this occur in edge cases or when there is no internet connection.
 public enum GeneralNetworkError: Error {
+
+    /// Operation was cancelled.
     case cancelled
+
+    /// A connection occured.
     case connection(Error)
-    case unexpected(Error)
+
+    /// Qualtive servers are current ongoing maintenance.
     case remoteMaintenance
+
+    /// Unexpected error occured. This should never happend.
+    case unexpected(Error)
 }

@@ -1,71 +1,12 @@
 import Foundation
 
+/// Feedback entry
+///
+/// Can also be called response or post in some places.
 public struct Entry {
 
+    /// Uniq id and reference to the entry.
     public let id: UInt64
-
-    public enum Content {
-        case title(TitleContent)
-        case score(ScoreContent)
-        case text(TextContent)
-        case select(SelectContent)
-        case multiselect(MultiselectContent)
-    }
-
-    public struct TitleContent {
-
-        public var text: String
-
-        public init(questionContent: Question.TitleContent) {
-            self.text = questionContent.text
-        }
-    }
-
-    public struct TextContent {
-
-        public var value: String?
-
-        public init(value: String?) {
-            self.value = value
-        }
-    }
-
-    public struct ScoreContent {
-
-        public var value: UInt8?
-
-        public init(value: UInt8?) {
-            guard (0...100).contains(value ?? 0) else {
-                fatalError("Score value must be between or equal to 0 and 100")
-            }
-            self.value = value
-        }
-
-        public init(value: Int?) {
-            guard (0...100).contains(value ?? 0) else {
-                fatalError("Score value must be between or equal to 0 and 100")
-            }
-            self.init(value: value.flatMap { UInt8($0) })
-        }
-    }
-
-    public struct SelectContent {
-
-        public var value: String?
-
-        public init(value: String?) {
-            self.value = value
-        }
-    }
-
-    public struct MultiselectContent {
-
-        public var values: [String]
-
-        public init(values: [String]) {
-            self.values = values
-        }
-    }
 
     // MARK: - JSON
 
@@ -87,6 +28,13 @@ public struct Entry {
         case general(GeneralNetworkError)
     }
 
+    /// Posts an entry to qualtive.io.
+    /// - Parameters:
+    ///   - collection: Collection to post to.
+    ///   - content: Content of the entry.
+    ///   - user: Authorized/logged in user that posted the entry.
+    ///   - customAttributes: Optional custom attributes to include with the entry.
+    ///   - completion: Closure that is called with the result of the operation. Called on the main thread.
     public static func post(
         to collection: Collection,
         content: [Content],
