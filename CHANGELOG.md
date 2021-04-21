@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.2
+
+### Fixed
+
+- Access control for some question content.
+- Missing platform attribute.
+
 ## 1.2.1
 
 ### Fixed
