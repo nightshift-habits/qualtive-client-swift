@@ -54,7 +54,7 @@ extension Question {
     public struct TitleContent {
 
         /// Text of the title to display.
-        let text: String
+        public let text: String
 
         init(json: [String: Any]) throws {
             guard let text = json["text"] as? String else {
@@ -81,7 +81,7 @@ extension Question {
     public struct TextContent {
 
         /// Placeholder to display in the text input.
-        let placeholder: String?
+        public let placeholder: String?
 
         init(json: [String: Any]) throws {
             self.placeholder = json["placeholder"] as? String
@@ -96,7 +96,7 @@ extension Question {
     public struct SelectContent {
 
         /// Possible options to select.
-        let options: [String]
+        public let options: [String]
 
         init(json: [String: Any]) throws {
             guard let options = json["options"] as? [String] else {
@@ -115,7 +115,7 @@ extension Question {
     public struct MultiselectContent {
 
         /// Possible options to select.
-        let options: [String]
+        public let options: [String]
 
         init(json: [String: Any]) throws {
             guard let options = json["options"] as? [String] else {
