@@ -18,7 +18,7 @@ public struct Attachment {
     // MARK: - Upload
 
     public enum Upload {
-        case data(Data, Kind)
+        case data(Data, kind: Kind)
 
         public enum Kind {
             case png
