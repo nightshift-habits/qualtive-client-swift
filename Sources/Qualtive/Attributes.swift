@@ -10,6 +10,8 @@ struct Attributes {
     static func defaultAttributes() -> [String: String] {
         var attributes = [String: String]()
 
+        if let attribute = platform() { attributes["Platform"] = attribute }
+
         if let attribute = os() { attributes["OS"] = attribute }
         if let attribute = osVersion() { attributes["OS Version"] = attribute }
 
@@ -23,6 +25,20 @@ struct Attributes {
         if let attribute = region() { attributes["Region"] = attribute }
 
         return attributes
+    }
+
+    private static func platform() -> String? {
+        #if os(iOS)
+        return "iOS"
+        #elseif os(macOS)
+        return "macOS"
+        #elseif os(tvOS)
+        return "tvOS"
+        #elseif os(watchOS)
+        return "iOS" // Can be discuessed. Often bundeled with iOS app.
+        #else
+        return nil
+        #endif
     }
 
     private static func os() -> String? {
