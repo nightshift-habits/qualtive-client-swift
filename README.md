@@ -20,7 +20,7 @@ https://github.com/nightshift-habits/qualtive-client-swift.git
 
 Add the following to your Podifle and then run `pod install` in the terminal:
 ```
-pod 'Qualtive', '~> 1.1'
+pod 'Qualtive', '~> 1'
 ```
 
 ## Usage
