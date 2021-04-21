@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "Qualtive"
-  spec.version      = "1.2.1"
+  spec.version      = "1.2.2"
   spec.summary      = "Qualtive Client Library for Swift."
   spec.author       = { "Qualtive" => "support@qualtive.io" }
   spec.homepage     = "https://qualtive.io"
