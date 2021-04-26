@@ -7,7 +7,7 @@ struct Attributes {
 
     private init() {}
 
-    static func defaultAttributes() -> [String: String] {
+    static func defaultAttributes(locale: Locale) -> [String: String] {
         var attributes = [String: String]()
 
         if let attribute = platform() { attributes["Platform"] = attribute }
@@ -21,8 +21,8 @@ struct Attributes {
         if let attribute = appVersion() { attributes["App Version"] = attribute }
         if let attribute = appBuild() { attributes["App Build"] = attribute }
 
-        if let attribute = language() { attributes["Language"] = attribute }
-        if let attribute = region() { attributes["Region"] = attribute }
+        if let attribute = language(locale: locale) { attributes["Language"] = attribute }
+        if let attribute = region(locale: locale) { attributes["Region"] = attribute }
 
         return attributes
     }
@@ -128,10 +128,10 @@ struct Attributes {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String
     }
 
-    private static func language() -> String? {
-        Locale.current.languageCode
+    private static func language(locale: Locale) -> String? {
+        locale.languageCode
     }
-    private static func region() -> String? {
-        Locale.current.regionCode
+    private static func region(locale: Locale) -> String? {
+        locale.regionCode
     }
 }

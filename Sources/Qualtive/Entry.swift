@@ -34,15 +34,17 @@ public struct Entry {
     ///   - content: Content of the entry.
     ///   - user: Authorized/logged in user that posted the entry.
     ///   - customAttributes: Optional custom attributes to include with the entry.
+    ///   - locale: Locale that was used when user entered post. Defaults to the device locale.
     ///   - completion: Closure that is called with the result of the operation. Called on the main thread.
     public static func post(
         to collection: Collection,
         content: [Content],
         user: User = User(),
         customAttributes: [String: String] = [:],
+        locale: Locale = .current,
         completion: ((Result<Entry, PostError>) -> Void)? = nil
     ) {
-        post(to: collection, content: content, user: user, customAttributes: customAttributes, options: .init(_remoteURLString: nil), completion: completion)
+        post(to: collection, content: content, user: user, customAttributes: customAttributes, locale: locale, options: .init(_remoteURLString: nil), completion: completion)
     }
 
     static func post(
@@ -50,6 +52,7 @@ public struct Entry {
         content: [Content],
         user: User = User(),
         customAttributes: [String: String] = [:],
+        locale: Locale = .current,
         options: PrivateOptions,
         completion: ((Result<Entry, PostError>) -> Void)? = nil
     ) {
@@ -98,7 +101,7 @@ public struct Entry {
 
         // Attributes
         do {
-            var attributes = Attributes.defaultAttributes()
+            var attributes = Attributes.defaultAttributes(locale: locale)
             for (key, value) in customAttributes {
                 attributes[key] = value
             }
