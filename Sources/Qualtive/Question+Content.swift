@@ -37,12 +37,21 @@ extension Question {
             }
 
             switch type {
-            case "title": self = .title(try .init(json: json))
-            case "score": self = .score(try .init(json: json))
-            case "text": self = .text(try .init(json: json))
-            case "select": self = .select(try .init(json: json))
-            case "multiselect": self = .multiselect(try .init(json: json))
-            case "attachments": self = .attachments(try .init(json: json))
+            case "title":
+                self = .title(try .init(json: json))
+            case "score":
+                guard let subcontent = try ScoreContent(json: json) else {
+                    return nil
+                }
+                self = .score(subcontent)
+            case "text":
+                self = .text(try .init(json: json))
+            case "select":
+                self = .select(try .init(json: json))
+            case "multiselect":
+                self = .multiselect(try .init(json: json))
+            case "attachments":
+                self = .attachments(try .init(json: json))
             default:
                 logHintNewVersion()
                 return nil
@@ -72,9 +81,20 @@ extension Question {
     /// Score/rating input for a single value between 0 and 100.
     public struct ScoreContent {
 
-        init(json: [String: Any]) throws {}
+        /// Kind/type of score to display for a user.
+        public let kind: Score.Kind
 
-        init() {}
+        init?(json: [String: Any]) throws {
+            guard let kind = try Score.Kind(json: json) else {
+                return nil
+            }
+
+            self.kind = kind
+        }
+
+        init() {
+            self.kind = .smilies5
+        }
     }
 
     /// Free-form text input. User can type whatever text he/she wants.

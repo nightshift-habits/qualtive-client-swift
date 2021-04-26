@@ -68,6 +68,9 @@ public struct Entry {
                 case .score(let content):
                     raw["type"] = "score"
                     if let value = content.value { raw["value"] = value }
+                    content.definition.kind.json.forEach { (key, value) in
+                        raw[key] = value
+                    }
                 case .text(let content):
                     raw["type"] = "text"
                     if let value = content.value { raw["value"] = value }
