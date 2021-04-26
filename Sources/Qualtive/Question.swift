@@ -60,18 +60,20 @@ public struct Question {
     /// Fetch a question and it's definition from qualtive.io.
     /// - Parameters:
     ///   - collection: The collection identifier for the question.
+    ///   - locale: The locale to use for question. If the question is translated on Qualtive this specified which translation to use for localizable fields. Defaults to device locale.
     ///   - completion: Closure that is called with the result of the operation. Called on the main thread.
-    public static func fetch(collection: Collection, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
+    public static func fetch(collection: Collection, locale: Locale = .current, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
         fetch(collection: collection, options: .init(_remoteURLString: nil), completion: completion)
     }
 
-    static func fetch(collection: Collection, options: PrivateOptions, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
+    static func fetch(collection: Collection, options: PrivateOptions, locale: Locale = .current, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
         var urlComponents = URLComponents(string: options._remoteURLString ?? Configuration.remoteURLString)!
         urlComponents.path = "/feedback/questions/\(collection.questionId)/"
 
         var urlRequest = URLRequest(url: urlComponents.url!, cachePolicy: .useProtocolCachePolicy, timeoutInterval: 30)
         urlRequest.httpMethod = "GET"
         urlRequest.addValue(collection.containerId, forHTTPHeaderField: "X-Container")
+        urlRequest.addValue(locale.identifier.replacingOccurrences(of: "_", with: "-"), forHTTPHeaderField: "Accept-Language")
 
         let task = URLSession.qualtive.dataTask(with: urlRequest) { (data, response, connectionError) in
             if let response = response as? HTTPURLResponse, let data = data {
