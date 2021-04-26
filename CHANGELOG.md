@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.3.0
+
+### Added
+
+ - Support for translated questions.
+ - Support for different kinds of scores.
+ - Added attribute ”App Identifier”.
+
 ## 1.2.2
 
 ### Fixed
