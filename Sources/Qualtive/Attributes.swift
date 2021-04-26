@@ -18,6 +18,7 @@ struct Attributes {
         if let attribute = deviceModel() { attributes["Device Model"] = attribute }
         if let attribute = deviceType() { attributes["Device Type"] = attribute }
 
+        if let attribute = appIdentifier() { attributes["App Identifier"] = attribute }
         if let attribute = appVersion() { attributes["App Version"] = attribute }
         if let attribute = appBuild() { attributes["App Build"] = attribute }
 
@@ -121,6 +122,9 @@ struct Attributes {
         #endif
     }
 
+    private static func appIdentifier() -> String? {
+        Bundle.main.bundleIdentifier
+    }
     private static func appVersion() -> String? {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
     }
