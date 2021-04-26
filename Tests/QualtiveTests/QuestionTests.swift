@@ -63,6 +63,7 @@ final class QuestionTests: XCTestCase {
             "name": "Question Name",
             "content": [[
                 "type": "score",
+                "scoreType": "smilies5",
             ]],
         ])
         XCTAssertEqual(result.id, "question-id")
