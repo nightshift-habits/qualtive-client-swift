@@ -74,7 +74,7 @@ final class EntryPostTests: XCTestCase {
                     XCTFail("\(error)")
                 }
             case .success(let question):
-                XCTFail("Expected not found error: \(question)")
+                XCTFail("Expected not general connection error: \(question)")
             }
         }
 

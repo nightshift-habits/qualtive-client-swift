@@ -57,6 +57,22 @@ public struct Question {
         case general(GeneralNetworkError)
     }
 
+#if swift(>=5.5)
+    /// Fetch a question and it's definition from qualtive.io.
+    /// - Parameters:
+    ///   - collection: The collection identifier for the question.
+    ///   - locale: The locale to use for question. If the question is translated on Qualtive this specified which translation to use for localizable fields. Defaults to device locale.
+    /// - Returns: Question definition.
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    public static func fetch(collection: Collection, locale: Locale = .current) async throws -> Question {
+        try await withCheckedThrowingContinuation { continuation in
+            fetch(collection: collection, options: .init(_remoteURLString: nil)) {
+                continuation.resume(with: $0)
+            }
+        }
+    }
+#endif
+
     /// Fetch a question and it's definition from qualtive.io.
     /// - Parameters:
     ///   - collection: The collection identifier for the question.

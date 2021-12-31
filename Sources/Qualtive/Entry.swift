@@ -28,6 +28,31 @@ public struct Entry {
         case general(GeneralNetworkError)
     }
 
+#if swift(>=5.5)
+    /// Posts an entry to qualtive.io.
+    /// - Parameters:
+    ///   - collection: Collection to post to.
+    ///   - content: Content of the entry.
+    ///   - user: Authorized/logged in user that posted the entry.
+    ///   - customAttributes: Optional custom attributes to include with the entry.
+    ///   - locale: Locale that was used when user entered post. Defaults to the device locale.
+    /// - Returns: Newly created entry.
+    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    public static func post(
+        to collection: Collection,
+        content: [Content],
+        user: User = User(),
+        customAttributes: [String: String] = [:],
+        locale: Locale = .current
+    ) async throws -> Entry {
+        try await withCheckedThrowingContinuation { continuation in
+            post(to: collection, content: content, user: user, customAttributes: customAttributes, locale: locale, options: .init(_remoteURLString: nil)) {
+                continuation.resume(with: $0)
+            }
+        }
+    }
+#endif
+
     /// Posts an entry to qualtive.io.
     /// - Parameters:
     ///   - collection: Collection to post to.
