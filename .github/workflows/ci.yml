@@ -3,7 +3,7 @@ name: CI
 on: push
 
 env:
-  XCODE_VERSION: "12.4"
+  XCODE_VERSION: "13.2"
   IOS_VERSION: "14.4"
   TVOS_VERSION: "14.3"
 
