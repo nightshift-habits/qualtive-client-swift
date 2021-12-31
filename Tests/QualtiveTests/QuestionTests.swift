@@ -313,7 +313,7 @@ final class QuestionTests: XCTestCase {
     func testFetchConnectionError() {
         let expectation = self.expectation(description: "Fetch")
 
-        Question.fetch(collection: ("ci-test", "not-found"), options: .init(_remoteURLString: "https://does-not-exists.qualtive.io/")) { result in
+        Question.fetch(collection: ("ci-test", "not-found"), options: .init(_remoteURLString: "https://does-not-exists-qualtive.io/")) { result in
             expectation.fulfill()
 
             switch result {

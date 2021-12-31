@@ -92,7 +92,7 @@ final class EntryTests: XCTestCase {
         Entry.post(to: ("ci-test", "not-found"), content: [
             .score(.init(value: 0)),
             .text(.init(value: "Hello world!")),
-        ], options: .init(_remoteURLString: "https://does-not-exists.qualtive.io/")) { result in
+        ], options: .init(_remoteURLString: "https://does-not-exists-qualtive.io/")) { result in
             expectation.fulfill()
 
             switch result {
