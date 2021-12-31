@@ -1,43 +1,13 @@
 import XCTest
 @testable import Qualtive
 
-final class EntryTests: XCTestCase {
+final class EntryPostTests: XCTestCase {
 
     static var allTests = [
-        ("testDecode", testDecode),
-        ("testDecodeInvalid", testDecodeInvalid),
-        ("testDecodeInvalidId", testDecodeInvalidId),
         ("testPostSuccess", testPostSuccess),
         ("testPostNotFound", testPostNotFound),
         ("testPostConnectionError", testPostConnectionError),
     ]
-
-    // MARK: Decode
-
-    func testDecode() throws {
-        let result = try Entry(json: [
-            "id": NSNumber(value: 123),
-        ])
-        XCTAssertEqual(result.id, 123)
-    }
-
-    func testDecodeInvalid() throws {
-        do {
-            _ = try Entry(json: [1])
-        } catch { return }
-        XCTFail("Did not throw")
-    }
-
-    func testDecodeInvalidId() throws {
-        do {
-            _ = try Question(json: [
-                "id": "a",
-            ])
-        } catch { return }
-        XCTFail("Did not throw")
-    }
-
-    // MARK: Fetch
 
     func testPostSuccess() {
         let expectation = self.expectation(description: "Post")
