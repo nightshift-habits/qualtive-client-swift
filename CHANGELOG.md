@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.4.0
+
+### Added
+
+- Async variants for all functions having a completion closure.
+- Support for WKWebView's to be registered for web Qualtive form takeover. This feature allows apps to present Qualtive forms natively from a web view. 
+
 ## 1.3.0
 
 ### Added
