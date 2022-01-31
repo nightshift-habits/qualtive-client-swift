@@ -1,6 +1,7 @@
 import XCTest
 @testable import Qualtive
 
+@available(iOS 13.0, tvOS 13.0, *)
 final class QuestionFetchAsyncTests: XCTestCase {
 
     static var allTests = [
