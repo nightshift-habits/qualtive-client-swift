@@ -120,6 +120,7 @@ public struct Entry {
         do {
             var rawUser: [String: Any] = [
                 "clientId": user.clientId,
+                "timeZoneIdentifier": TimeZone.current.identifier,
             ]
             if let value = user.id { rawUser["id"] = value }
             if let value = user.name { rawUser["name"] = value }
