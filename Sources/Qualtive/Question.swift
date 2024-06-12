@@ -1,7 +1,7 @@
 import Foundation
 
 /// Question defined on Qualtive on how an created entry's content should be defined.
-public struct Question {
+public struct Question: Sendable {
 
     /// Identifier of the question. Can also be used as a slug.
     public let id: String
@@ -78,11 +78,11 @@ public struct Question {
     ///   - collection: The collection identifier for the question.
     ///   - locale: The locale to use for question. If the question is translated on Qualtive this specified which translation to use for localizable fields. Defaults to device locale.
     ///   - completion: Closure that is called with the result of the operation. Called on the main thread.
-    public static func fetch(collection: Collection, locale: Locale = .current, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
+    public static func fetch(collection: Collection, locale: Locale = .current, completion: (@Sendable (Result<Question, FetchError>) -> Void)? = nil) {
         fetch(collection: collection, options: .init(_remoteURLString: nil), completion: completion)
     }
 
-    static func fetch(collection: Collection, options: PrivateOptions, locale: Locale = .current, completion: ((Result<Question, FetchError>) -> Void)? = nil) {
+    static func fetch(collection: Collection, options: PrivateOptions, locale: Locale = .current, completion: (@Sendable (Result<Question, FetchError>) -> Void)? = nil) {
         var urlComponents = URLComponents(string: options._remoteURLString ?? Configuration.remoteURLString)!
         urlComponents.path = "/feedback/questions/\(collection.questionId)/"
 

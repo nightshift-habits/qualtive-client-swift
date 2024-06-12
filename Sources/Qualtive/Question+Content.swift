@@ -11,7 +11,7 @@ extension Question {
     /// - `select`: Single select/radio button input. User can select one of many possible pre-defined options.
     /// - `multiselect`: Multi-select/checkbox buttons input. User can select on or many of possible pre-defined options.
     /// - `attachments`: Attachments/files input.
-    public enum Content {
+    public enum Content: Sendable {
 
         /// Static title to display to the user. Not user interactable.
         case title(TitleContent)
@@ -60,7 +60,7 @@ extension Question {
     }
 
     /// Static title to display to the user. Not user interactable.
-    public struct TitleContent {
+    public struct TitleContent: Sendable {
 
         /// Text of the title to display.
         public let text: String
@@ -79,7 +79,7 @@ extension Question {
     }
 
     /// Score/rating input for a single value between 0 and 100.
-    public struct ScoreContent {
+    public struct ScoreContent: Sendable {
 
         /// Kind/type of score to display for a user.
         public let kind: Score.Kind
@@ -98,7 +98,7 @@ extension Question {
     }
 
     /// Free-form text input. User can type whatever text he/she wants.
-    public struct TextContent {
+    public struct TextContent: Sendable {
 
         /// Placeholder to display in the text input.
         public let placeholder: String?
@@ -113,7 +113,7 @@ extension Question {
     }
 
     /// Single select/radio button input. User can select one of many possible pre-defined options.
-    public struct SelectContent {
+    public struct SelectContent: Sendable {
 
         /// Possible options to select.
         public let options: [String]
@@ -132,7 +132,7 @@ extension Question {
     }
 
     /// Multi-select/checkbox buttons input. User can select on or many of possible pre-defined options.
-    public struct MultiselectContent {
+    public struct MultiselectContent: Sendable {
 
         /// Possible options to select.
         public let options: [String]
@@ -151,7 +151,7 @@ extension Question {
     }
 
     /// Attachments/files input.
-    public struct AttachmentsContent {
+    public struct AttachmentsContent: Sendable {
 
         init(json: [String: Any]) throws {}
 

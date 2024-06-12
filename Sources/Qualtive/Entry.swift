@@ -3,7 +3,7 @@ import Foundation
 /// Feedback entry
 ///
 /// Can also be called response or post in some places.
-public struct Entry {
+public struct Entry: Sendable {
 
     /// Uniq id and reference to the entry.
     public let id: UInt64
@@ -67,7 +67,7 @@ public struct Entry {
         user: User = User(),
         customAttributes: [String: String] = [:],
         locale: Locale = .current,
-        completion: ((Result<Entry, PostError>) -> Void)? = nil
+        completion: (@Sendable (Result<Entry, PostError>) -> Void)? = nil
     ) {
         post(to: collection, content: content, user: user, customAttributes: customAttributes, locale: locale, options: .init(_remoteURLString: nil), completion: completion)
     }
@@ -79,7 +79,7 @@ public struct Entry {
         customAttributes: [String: String] = [:],
         locale: Locale = .current,
         options: PrivateOptions,
-        completion: ((Result<Entry, PostError>) -> Void)? = nil
+        completion: (@Sendable (Result<Entry, PostError>) -> Void)? = nil
     ) {
         // Base and content
         var body: [String: Any] = [

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct User {
+public struct User: Sendable {
 
     /// Uniq client id for this device.
     public let clientId: String

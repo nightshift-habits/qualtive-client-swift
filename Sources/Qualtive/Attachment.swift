@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Attachment {
+public struct Attachment: Sendable {
 
     /// Uniq identifier.
     public let id: UInt64
@@ -17,10 +17,10 @@ public struct Attachment {
 
     // MARK: - Upload
 
-    public enum Upload {
+    public enum Upload: Sendable {
         case data(Data, kind: Kind)
 
-        public enum Kind {
+        public enum Kind: Sendable {
             case png
             case jpeg
 
@@ -48,7 +48,7 @@ public struct Attachment {
     }
 #endif
 
-    public static func create(from upload: Upload, to containerId: String, completion: ((Result<Attachment, UploadError>) -> Void)? = nil) {
+    public static func create(from upload: Upload, to containerId: String, completion: (@Sendable (Result<Attachment, UploadError>) -> Void)? = nil) {
         var urlComponents = URLComponents(string: Configuration.remoteURLString)!
         urlComponents.path = "/feedback/attachments/"
 
@@ -113,7 +113,7 @@ public struct Attachment {
         task.resume()
     }
 
-    private func update(from upload: Upload, uploadURL: URL, completion: ((Result<Attachment, UploadError>) -> Void)? = nil) {
+    private func update(from upload: Upload, uploadURL: URL, completion: (@Sendable (Result<Attachment, UploadError>) -> Void)? = nil) {
         var urlRequest = URLRequest(url: uploadURL, cachePolicy: .useProtocolCachePolicy, timeoutInterval: 30)
         urlRequest.httpMethod = "PUT"
 

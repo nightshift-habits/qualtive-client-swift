@@ -26,28 +26,23 @@ private final class ScriptMessageHandler: NSObject, WKScriptMessageHandlerWithRe
 
     // MARK: - WKScriptMessageHandlerWithReply
 
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) async -> (Any?, String?) {
         guard let dictionary = message.body as? [String: Any] else {
-            replyHandler(nil, "Message must be a dictionary")
-            return
+            return (nil, "Message must be a dictionary")
         }
         guard let rawCollection = dictionary["collection"] as? [String] else {
-            replyHandler(nil, "Collection must be an array of strings")
-            return
+            return (nil, "Collection must be an array of strings")
         }
         guard rawCollection.count >= 2 else {
-            replyHandler(nil, "Collection is invalid")
-            return
+            return (nil, "Collection is invalid")
         }
         let collection: Collection = (rawCollection[0], rawCollection[1])
 
-        Task {
-            do {
-                let entry = try await withCheckedThrowingContinuation { present(collection, $0) }
-                replyHandler(["id": entry.id], nil)
-            } catch {
-                replyHandler(nil, error.localizedDescription)
-            }
+        do {
+            let entry = try await withCheckedThrowingContinuation { present(collection, $0) }
+            return (["id": entry.id], nil)
+        } catch {
+            return (nil, error.localizedDescription)
         }
     }
 }

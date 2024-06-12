@@ -20,7 +20,7 @@ extension Score {
     /// - `smilies3`: 3 user options displayed as smilies
     /// - `thumbs`: 2 user options displayed as up and down thumbs
     /// - `nps`: 11 user options displayed as a range of numbers starting with 0 and ending on 10
-    public enum Kind {
+    public enum Kind: Sendable {
 
         /// 5 user options displayed as smilies
         case smilies5
