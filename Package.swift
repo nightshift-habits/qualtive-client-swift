@@ -20,7 +20,10 @@ let package = Package(
     targets: [
         .target(
             name: "Qualtive",
-            dependencies: []
+            dependencies: [],
+            resources: [
+                .process("Resources/PrivacyInfo.xcprivacy")
+            ]
         ),
         .testTarget(
             name: "QualtiveTests",
