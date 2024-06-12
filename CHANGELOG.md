@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.0
+
+### Added
+
+- Privacy Manifest
+- Collecting time zone when posting feedback. This is used to show dates in the user's own time zone.
+
+### Changed
+
+- Preparation for Swift 6 and strict concurrency checking.
+- Removed legacy Linux tests map
+- Upgraded to Swift 5.10 tools
+
 ## 1.4.1
 
 ### Fixed
