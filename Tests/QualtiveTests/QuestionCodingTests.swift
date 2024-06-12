@@ -3,23 +3,6 @@ import XCTest
 
 final class QuestionCodingTests: XCTestCase {
 
-    static var allTests = [
-        ("testDecodeNoContent", testDecodeNoContent),
-        ("testDecodeContentTitle", testDecodeContentTitle),
-        ("testDecodeContentScore", testDecodeContentScore),
-        ("testDecodeContentText", testDecodeContentText),
-        ("testDecodeContentTextNoPlaceholder", testDecodeContentTextNoPlaceholder),
-        ("testDecodeContentSelect", testDecodeContentSelect),
-        ("testDecodeContentMultiselect", testDecodeContentMultiselect),
-        ("testDecodeContentFuture", testDecodeContentFuture),
-        ("testDecodeInvalid", testDecodeInvalid),
-        ("testDecodeInvalidId", testDecodeInvalidId),
-        ("testDecodeInvalidName", testDecodeInvalidName),
-        ("testDecodeInvalidContent", testDecodeInvalidContent),
-        ("testDecodeInvalidContentType", testDecodeInvalidContentType),
-        ("testDecodeInvalidContentTitleText", testDecodeInvalidContentTitleText),
-    ]
-
     func testDecodeNoContent() throws {
         let result = try Question(json: [
             "id": "question-id",

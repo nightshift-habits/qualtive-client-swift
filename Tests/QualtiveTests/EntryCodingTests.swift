@@ -3,12 +3,6 @@ import XCTest
 
 final class EntryCodingTests: XCTestCase {
 
-    static var allTests = [
-        ("testDecode", testDecode),
-        ("testDecodeInvalid", testDecodeInvalid),
-        ("testDecodeInvalidId", testDecodeInvalidId),
-    ]
-
     func testDecode() throws {
         let result = try Entry(json: [
             "id": NSNumber(value: 123),

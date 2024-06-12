@@ -3,12 +3,6 @@ import XCTest
 
 final class QuestionFetchTests: XCTestCase {
 
-    static var allTests = [
-        ("testFetchSuccess", testFetchSuccess),
-        ("testFetchNotFound", testFetchNotFound),
-        ("testFetchConnectionError", testFetchConnectionError),
-    ]
-
     func testFetchSuccess() {
         let expectation = self.expectation(description: "Fetch")
 

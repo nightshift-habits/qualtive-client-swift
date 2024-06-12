@@ -4,11 +4,6 @@ import XCTest
 @available(iOS 13.0, tvOS 13.0, *)
 final class EntryPostAsyncTests: XCTestCase {
 
-    static var allTests = [
-        ("testPostSuccess", testPostSuccess),
-        ("testPostNotFound", testPostNotFound),
-    ]
-
     func testPostSuccess() async throws {
         let entry = try await Entry.post(to: ("ci-test", "swift"), content: [
             .score(.init(value: 75)),

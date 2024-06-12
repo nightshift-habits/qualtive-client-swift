@@ -3,12 +3,6 @@ import XCTest
 
 final class EntryPostTests: XCTestCase {
 
-    static var allTests = [
-        ("testPostSuccess", testPostSuccess),
-        ("testPostNotFound", testPostNotFound),
-        ("testPostConnectionError", testPostConnectionError),
-    ]
-
     func testPostSuccess() {
         let expectation = self.expectation(description: "Post")
 

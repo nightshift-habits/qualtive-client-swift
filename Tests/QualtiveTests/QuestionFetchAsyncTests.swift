@@ -4,11 +4,6 @@ import XCTest
 @available(iOS 13.0, tvOS 13.0, *)
 final class QuestionFetchAsyncTests: XCTestCase {
 
-    static var allTests = [
-        ("testFetchSuccess", testFetchSuccess),
-        ("testFetchNotFound", testFetchNotFound),
-    ]
-
     func testFetchSuccess() async throws {
         let question = try await Question.fetch(collection: ("ci-test", "swift"))
 
