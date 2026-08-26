@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 
 @testable import Qualtive
@@ -62,5 +63,21 @@ struct AttributesTests {
     let key: Attributes.Key = "Custom Key"
     #expect(key.rawValue == "Custom Key")
     #expect(Attributes.Key.platform.rawValue == "Platform")
+  }
+
+  @Test func `should initialize keys from raw values`() {
+    #expect(Attributes.Key(rawValue: "Foo").rawValue == "Foo")
+    #expect(Attributes.Key("Bar").rawValue == "Bar")
+    #expect(Attributes.Key("Baz").description == "Baz")
+  }
+
+  @Test func `should encode as a string dictionary`() throws {
+    let attributes: Attributes = [.platform: "iOS", "Age": "32"]
+    let encoded = try JSONDecoder()
+      .decode(
+        [String: String].self,
+        from: JSONEncoder().encode(attributes)
+      )
+    #expect(encoded == ["Platform": "iOS", "Age": "32"])
   }
 }

@@ -3,7 +3,7 @@ import Testing
 
 @testable import Qualtive
 
-@Suite
+@Suite(.serialized)
 struct NetworkControllerTests {
 
   private struct SampleResponse: Decodable, Equatable {
@@ -166,6 +166,35 @@ struct NetworkControllerTests {
       headers: ["Accept-Language": "en-US"]
     )
     #expect(enquiry.slug == "swift")
+  }
+
+  @Test func `should send a path without a leading slash`() async throws {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [RecordingURLProtocol.self]
+    let session = URLSession(configuration: configuration)
+    let networkController = NetworkController(
+      urlSession: session,
+      baseURL: URL(string: "https://example.test/")!
+    )
+
+    RecordingURLProtocol.handler = { request in
+      #expect(request.url?.absoluteString == "https://example.test/feedback/enquiries/swift/")
+      let response = HTTPURLResponse(
+        url: request.url!,
+        statusCode: 200,
+        httpVersion: nil,
+        headerFields: nil
+      )!
+      return (jsonData(["id": 1] as TestJSON), response)
+    }
+    defer { RecordingURLProtocol.handler = nil }
+
+    let result: SampleResponse = try await networkController.send(
+      method: "GET",
+      path: "feedback/enquiries/swift/",
+      containerId: "ci-test"
+    )
+    #expect(result.id == 1)
   }
 }
 

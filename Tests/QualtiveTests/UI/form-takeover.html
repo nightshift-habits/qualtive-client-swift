@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Qualtive form takeover</title>
+  </head>
+  <body>
+    <script>
+      async function send(body) {
+        try {
+          const result = await window.webkit.messageHandlers.qualtive.postMessage(
+            body
+          );
+          return { ok: true, result };
+        } catch (error) {
+          return { ok: false, error: String(error) };
+        }
+      }
+    </script>
+  </body>
+</html>
