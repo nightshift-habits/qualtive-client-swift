@@ -37,21 +37,18 @@ public struct Attachment: Sendable {
     case general(GeneralNetworkError)
   }
 
-  #if swift(>=5.5)
-    @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
-    public static func create(
-      from upload: Upload,
-      to containerId: String
-    ) async throws
-      -> Attachment
-    {
-      try await withCheckedThrowingContinuation { continuation in
-        create(from: upload, to: containerId) {
-          continuation.resume(with: $0)
-        }
+  public static func create(
+    from upload: Upload,
+    to containerId: String
+  ) async throws
+    -> Attachment
+  {
+    try await withCheckedThrowingContinuation { continuation in
+      create(from: upload, to: containerId) {
+        continuation.resume(with: $0)
       }
     }
-  #endif
+  }
 
   public static func create(
     from upload: Upload,

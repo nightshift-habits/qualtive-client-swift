@@ -2,7 +2,6 @@ import XCTest
 
 @testable import Qualtive
 
-@available(iOS 13.0, tvOS 13.0, *)
 final class EntryPostAsyncTests: XCTestCase {
 
   func testPostSuccess() async throws {
