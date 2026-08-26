@@ -25,7 +25,7 @@ To post a feedback entry, use the `Entry.post`-method. For example:
 ```swift
 import Qualtive
 
-Qualtive.Entry.post(
+let entry = try await Qualtive.Entry.post(
   to: ("my-company", "my-question"),
   content: [
     .score(.init(value: 75)), // Must be equal or between 0 and 100
@@ -37,26 +37,24 @@ Qualtive.Entry.post(
 If you want to get the question and it's content specified at qualtive.io, use the `Question.fetch`-method. For example:
 
 ```swift
-Qualtive.Question.fetch(collection: ("my-company", "my-question")) { result in
-  switch result {
-  case .failure(let error):
-    break // TODO: handle error
-  case .success(let question):
-    print(question)
-  }
+do {
+  let question = try await Qualtive.Question.fetch(collection: ("my-company", "my-question"))
+  print(question)
+} catch {
+  // TODO: handle error
 }
 ```
 
 To post a feedback entry with complex content, use the content-property. For example:
 
 ```swift
-Qualtive.Entry.post(
-  to: ("my-company", "my-question"), 
+try await Qualtive.Entry.post(
+  to: ("my-company", "my-question"),
   content: [
     .score(.init(value: 75)),
     .title(.init(value: "What are your thoughts on this feature?")),
     .text(.init(value: "It's awesome!")),
-  }
+  ]
 )
 ```
 
@@ -65,8 +63,8 @@ Qualtive.Entry.post(
 If users can login on your site, you can include a user property describing the user. For example:
 
 ```swift
-Qualtive.Entry.post(
-  to: ("my-company", "my-question"), 
+try await Qualtive.Entry.post(
+  to: ("my-company", "my-question"),
   content: [
     .score(.init(value: 75)),
   ],
@@ -83,7 +81,7 @@ Qualtive.Entry.post(
 You can also include custom attributes that will be shown up on qualtive.io. For example:
 
 ```swift
-Qualtive.Entry.post(
+try await Qualtive.Entry.post(
   to: ("my-company", "my-question"),
   content: [
     .score(.init(value: 75)),

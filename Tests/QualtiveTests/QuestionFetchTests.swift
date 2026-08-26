@@ -4,94 +4,71 @@ import XCTest
 
 final class QuestionFetchTests: XCTestCase {
 
-  func testFetchSuccess() {
-    let expectation = self.expectation(description: "Fetch")
+  func testFetchSuccess() async throws {
+    let question = try await Question.fetch(collection: ("ci-test", "swift"))
 
-    Question.fetch(collection: ("ci-test", "swift")) { result in
-      expectation.fulfill()
+    XCTAssertEqual(question.id, "swift")
+    XCTAssertEqual(question.name, "Swift?")
+    XCTAssertEqual(question.content.count, 3)
 
-      switch result {
-      case .failure(let error):
+    if question.content.count >= 1 {
+      switch question.content[0] {
+      case .score:
+        break
+      default:
+        XCTFail("Expected content 0 to be score")
+      }
+    }
+    if question.content.count >= 2 {
+      switch question.content[1] {
+      case .text(let content):
+        XCTAssertEqual(content.placeholder, "Write here…")
+      default:
+        XCTFail("Expected content 0 to be text")
+      }
+    }
+    if question.content.count >= 3 {
+      switch question.content[2] {
+      case .title(let content):
+        XCTAssertEqual(content.text, "Thoughts on Swift?")
+      default:
+        XCTFail("Expected content 0 to be title")
+      }
+    }
+  }
+
+  func testFetchNotFound() async throws {
+    do {
+      _ = try await Question.fetch(collection: ("ci-test", "not-found"))
+    } catch {
+      switch error as? Question.FetchError {
+      case .notFound:
+        return
+      default:
         XCTFail("\(error)")
-      case .success(let question):
-        XCTAssertEqual(question.id, "swift")
-        XCTAssertEqual(question.name, "Swift?")
-        XCTAssertEqual(question.content.count, 3)
-
-        if question.content.count >= 1 {
-          switch question.content[0] {
-          case .score:
-            break
-          default:
-            XCTFail("Expected content 0 to be score")
-          }
-        }
-        if question.content.count >= 2 {
-          switch question.content[1] {
-          case .text(let content):
-            XCTAssertEqual(content.placeholder, "Write here…")
-          default:
-            XCTFail("Expected content 0 to be text")
-          }
-        }
-        if question.content.count >= 3 {
-          switch question.content[2] {
-          case .title(let content):
-            XCTAssertEqual(content.text, "Thoughts on Swift?")
-          default:
-            XCTFail("Expected content 0 to be title")
-          }
-        }
+        return
       }
     }
 
-    waitForExpectations(timeout: 5)
+    XCTFail("Expected not found error")
   }
 
-  func testFetchNotFound() {
-    let expectation = self.expectation(description: "Fetch")
-
-    Question.fetch(collection: ("ci-test", "not-found")) { result in
-      expectation.fulfill()
-
-      switch result {
-      case .failure(let error):
-        switch error {
-        case .notFound:
-          break
-        default:
-          XCTFail("\(error)")
-        }
-      case .success(let question):
-        XCTFail("Expected not found error: \(question)")
+  func testFetchConnectionError() async throws {
+    do {
+      _ = try await Question.fetch(
+        collection: ("ci-test", "not-found"),
+        options: .init(_remoteURLString: "https://does-not-exists-qualtive.io/")
+      )
+    } catch {
+      switch error as? Question.FetchError {
+      case .general(.connection):
+        return
+      default:
+        XCTFail("\(error)")
+        return
       }
     }
 
-    waitForExpectations(timeout: 5)
-  }
-
-  func testFetchConnectionError() {
-    let expectation = self.expectation(description: "Fetch")
-
-    Question.fetch(
-      collection: ("ci-test", "not-found"),
-      options: .init(_remoteURLString: "https://does-not-exists-qualtive.io/")
-    ) { result in
-      expectation.fulfill()
-
-      switch result {
-      case .failure(let error):
-        switch error {
-        case .general(.connection):
-          break
-        default:
-          XCTFail("\(error)")
-        }
-      case .success(let question):
-        XCTFail("Expected not found error: \(question)")
-      }
-    }
-
-    waitForExpectations(timeout: 5)
+    XCTFail("Expected connection error")
   }
 }

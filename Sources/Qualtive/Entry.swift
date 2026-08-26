@@ -43,44 +43,13 @@ public struct Entry: Sendable {
     customAttributes: [String: String] = [:],
     locale: Locale = .current
   ) async throws -> Entry {
-    try await withCheckedThrowingContinuation { continuation in
-      post(
-        to: collection,
-        content: content,
-        user: user,
-        customAttributes: customAttributes,
-        locale: locale,
-        options: .init(_remoteURLString: nil)
-      ) {
-        continuation.resume(with: $0)
-      }
-    }
-  }
-
-  /// Posts an entry to qualtive.io.
-  /// - Parameters:
-  ///   - collection: Collection to post to.
-  ///   - content: Content of the entry.
-  ///   - user: Authorized/logged in user that posted the entry.
-  ///   - customAttributes: Optional custom attributes to include with the entry.
-  ///   - locale: Locale that was used when user entered post. Defaults to the device locale.
-  ///   - completion: Closure that is called with the result of the operation. Called on the main thread.
-  public static func post(
-    to collection: Collection,
-    content: [Content],
-    user: User = User(),
-    customAttributes: [String: String] = [:],
-    locale: Locale = .current,
-    completion: (@Sendable (Result<Entry, PostError>) -> Void)? = nil
-  ) {
-    post(
+    try await post(
       to: collection,
       content: content,
       user: user,
       customAttributes: customAttributes,
       locale: locale,
-      options: .init(_remoteURLString: nil),
-      completion: completion
+      options: .init(_remoteURLString: nil)
     )
   }
 
@@ -90,10 +59,8 @@ public struct Entry: Sendable {
     user: User = User(),
     customAttributes: [String: String] = [:],
     locale: Locale = .current,
-    options: PrivateOptions,
-    completion: (@Sendable (Result<Entry, PostError>) -> Void)? = nil
-  ) {
-    // Base and content
+    options: PrivateOptions
+  ) async throws -> Entry {
     var body: [String: Any] = [
       "questionId": collection.questionId,
       "content": content.map { (content) -> Any in
@@ -128,7 +95,6 @@ public struct Entry: Sendable {
       ],
     ]
 
-    // User
     do {
       var rawUser: [String: Any] = [
         "clientId": user.clientId,
@@ -140,7 +106,6 @@ public struct Entry: Sendable {
       body["user"] = rawUser
     }
 
-    // Attributes
     do {
       var attributes = Attributes.defaultAttributes(locale: locale)
       for (key, value) in customAttributes {
@@ -149,7 +114,6 @@ public struct Entry: Sendable {
       body["attributes"] = attributes
     }
 
-    // Make request
     var urlComponents = URLComponents(
       string: options._remoteURLString ?? Configuration.remoteURLString
     )!
@@ -165,47 +129,42 @@ public struct Entry: Sendable {
     urlRequest.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     urlRequest.httpBody = try! JSONSerialization.data(withJSONObject: body)
 
-    let task = URLSession.qualtive.dataTask(with: urlRequest) { (data, response, connectionError) in
-      if let response = response as? HTTPURLResponse, let data = data {
-        switch response.statusCode {
-        case 200..<300:
-          do {
-            let json = try JSONSerialization.jsonObject(with: data)
-            let result = try Entry(json: json)
-            DispatchQueue.main.async {
-              completion?(.success(result))
-            }
-          } catch {
-            DispatchQueue.main.async {
-              completion?(.failure(.general(.unexpected(error))))
-            }
-          }
-        case 404:
-          DispatchQueue.main.async {
-            completion?(.failure(.questionNotFound))
-          }
-        case 503:
-          DispatchQueue.main.async {
-            completion?(.failure(.general(.unexpected(UnexpectedError.remoteMaintenance))))
-          }
-        default:
-          DispatchQueue.main.async {
-            completion?(
-              .failure(.general(.unexpected(UnexpectedError.httpStatusCode(response.statusCode))))
-            )
-          }
-        }
-
-      } else if let error = connectionError {
-        DispatchQueue.main.async {
-          completion?(.failure(.general(.connection(error))))
-        }
-      } else {
-        DispatchQueue.main.async {
-          completion?(.failure(.general(.cancelled)))
-        }
-      }
+    let data: Data
+    let response: URLResponse
+    do {
+      (data, response) = try await URLSession.qualtive.data(for: urlRequest)
+    } catch {
+      throw mapPostNetworkError(error)
     }
-    task.resume()
+
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw PostError.general(.unexpected(ParseError(debugMessage: "Response is not HTTP")))
+    }
+
+    switch httpResponse.statusCode {
+    case 200..<300:
+      do {
+        let json = try JSONSerialization.jsonObject(with: data)
+        return try Entry(json: json)
+      } catch {
+        throw PostError.general(.unexpected(error))
+      }
+    case 404:
+      throw PostError.questionNotFound
+    case 503:
+      throw PostError.general(.unexpected(UnexpectedError.remoteMaintenance))
+    default:
+      throw PostError.general(.unexpected(UnexpectedError.httpStatusCode(httpResponse.statusCode)))
+    }
   }
+}
+
+private func mapPostNetworkError(_ error: Error) -> Entry.PostError {
+  if error is CancellationError {
+    return .general(.cancelled)
+  }
+  if let urlError = error as? URLError, urlError.code == .cancelled {
+    return .general(.cancelled)
+  }
+  return .general(.connection(error))
 }
