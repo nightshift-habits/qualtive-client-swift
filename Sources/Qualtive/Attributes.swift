@@ -8,7 +8,7 @@ struct Attributes {
 
   private init() {}
 
-  static func defaultAttributes(locale: Locale) -> [String: String] {
+  static func defaultAttributes(locale: Locale) async -> [String: String] {
     var attributes: [String: String] = [:]
 
     if let attribute = platform() { attributes["Platform"] = attribute }
@@ -17,7 +17,7 @@ struct Attributes {
     if let attribute = osVersion() { attributes["OS Version"] = attribute }
 
     if let attribute = deviceModel() { attributes["Device Model"] = attribute }
-    if let attribute = deviceType() { attributes["Device Type"] = attribute }
+    if let attribute = await deviceType() { attributes["Device Type"] = attribute }
 
     if let attribute = appIdentifier() { attributes["App ID"] = attribute }
     if let attribute = appVersion() { attributes["App Version"] = attribute }
@@ -71,7 +71,8 @@ struct Attributes {
       }
       var model = [CChar](repeating: 0, count: count)
       sysctlbyname("hw.model", &model, &count, nil, 0)
-      return String(cString: model)
+      let utf8 = model.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
+      return String(decoding: utf8, as: UTF8.self)
     }
 
     func systemInfo() -> String? {
@@ -94,9 +95,9 @@ struct Attributes {
       return systemInfo()
     #endif
   }
-  private static func deviceType() -> String? {
+  private static func deviceType() async -> String? {
     #if os(iOS)
-      switch UIDevice.current.userInterfaceIdiom {
+      switch await UIDevice.current.userInterfaceIdiom {
       case .phone:
         return "Phone"
       case .pad:
@@ -107,6 +108,8 @@ struct Attributes {
         return "TV"
       case .carPlay:
         return "Car"
+      case .vision:
+        return "Vision"
       case .unspecified:
         return nil
       @unknown default:
