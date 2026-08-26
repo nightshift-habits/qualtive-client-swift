@@ -2,5 +2,5 @@ import Foundation
 
 struct PrivateOptions {
 
-    let _remoteURLString: String?
+  let _remoteURLString: String?
 }
