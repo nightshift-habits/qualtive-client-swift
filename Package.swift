@@ -5,10 +5,10 @@ import PackageDescription
 let package = Package(
   name: "Qualtive",
   platforms: [
-    .macOS(.v10_13),
-    .iOS(.v12),
-    .tvOS(.v12),
-    .watchOS(.v4),
+    .macOS(.v12),
+    .iOS(.v15),
+    .tvOS(.v15),
+    .watchOS(.v8),
   ],
   products: [
     .library(
