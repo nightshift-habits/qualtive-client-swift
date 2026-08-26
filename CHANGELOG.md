@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Dropped CocoaPods support. Swift Package Manager is the only supported installation method. 1.5.0 remains the last CocoaPods release.
+- Upgraded to Swift 6.0 tools.
 - Raised minimum platforms to iOS 15, iPadOS 15, macOS 12, tvOS 15, and watchOS 8.
 - Networking APIs are async-only. Completion-handler variants of `Entry.post`, `Question.fetch`, and `Attachment.create` were removed.
 
