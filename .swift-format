@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "lineBreakAroundMultilineExpressionChainComponents": true,
+  "lineBreakBeforeControlFlowKeywords": false,
+  "lineBreakBeforeEachArgument": true,
+  "lineBreakBeforeEachGenericRequirement": false,
+  "lineBreakBetweenDeclarationAttributes": false,
+  "prioritizeKeepingFunctionOutputTogether": true,
+  "rules": {
+    "AlwaysUseLiteralForEmptyCollectionInit": true,
+    "OmitExplicitReturns": true,
+    "UseEarlyExits": true
+  }
+}
