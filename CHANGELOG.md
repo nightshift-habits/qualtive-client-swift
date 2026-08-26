@@ -9,7 +9,8 @@ All notable changes to this project will be documented in this file.
 - Dropped CocoaPods support. Swift Package Manager is the only supported installation method. 1.5.0 remains the last CocoaPods release.
 - Upgraded to Swift 6.0 tools.
 - Raised minimum platforms to iOS 15, iPadOS 15, macOS 12, tvOS 15, and watchOS 8.
-- Networking APIs are async-only. Completion-handler variants of `Entry.post`, `Question.fetch`, and `Attachment.create` were removed.
+- Networking APIs are async-only. Completion-handler variants were removed.
+- Breaking redesign: `Question` → `Enquiry`, controller-based public API, and Codable networking. See README.
 
 ## 1.5.0
 
@@ -62,19 +63,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Support for select and multiselect contents.
-- Support for attachments contents.
-
-### Changed
-
-- Improved documentation.
+ - Support for attachments.
 
 ## 1.1.0
 
 ### Added
 
-- Added support for CoocaPods.
+ - Support for custom attributes when posting.
 
 ## 1.0.0
 
-Inital release.
+### Added
+
+ - Initial release.

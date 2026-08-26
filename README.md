@@ -7,7 +7,7 @@
 Add the following to your Package.swift:
 ```
 dependencies: [
-  .package(name: "Qualtive", url: "https://github.com/nightshift-habits/qualtive-client-swift.git", from: "1.0.0"),
+  .package(url: "https://github.com/nightshift-habits/qualtive-client-swift.git", from: "2.0.0"),
 ]
 ```
 
@@ -18,15 +18,15 @@ https://github.com/nightshift-habits/qualtive-client-swift.git
 
 ## Usage
 
-First of all, make sure you have created a question on [qualtive.io](https://qualtive.io). Each feedback entry is posted to a so called collection (ID) which can be found in the question page.
+First of all, make sure you have created an enquiry on [qualtive.io](https://qualtive.io). Each feedback entry is posted to a so called collection (container ID + enquiry ID or slug) which can be found on the enquiry page.
 
-To post a feedback entry, use the `Entry.post`-method. For example:
+To post a feedback entry, use `PostController`. For example:
 
 ```swift
 import Qualtive
 
-let entry = try await Qualtive.Entry.post(
-  to: ("my-company", "my-question"),
+let entry = try await PostController().post(
+  to: "my-company/my-enquiry",
   content: [
     .score(.init(value: 75)), // Must be equal or between 0 and 100
     .text(.init(value: "Hello world!")),
@@ -34,12 +34,14 @@ let entry = try await Qualtive.Entry.post(
 )
 ```
 
-If you want to get the question and it's content specified at qualtive.io, use the `Question.fetch`-method. For example:
+If you want to get the enquiry and its content specified at qualtive.io, use `EnquiryController`. For example:
 
 ```swift
 do {
-  let question = try await Qualtive.Question.fetch(collection: ("my-company", "my-question"))
-  print(question)
+  let enquiry = try await EnquiryController().fetch(
+    collection: "my-company/my-enquiry"
+  )
+  print(enquiry)
 } catch {
   // TODO: handle error
 }
@@ -48,27 +50,50 @@ do {
 To post a feedback entry with complex content, use the content-property. For example:
 
 ```swift
-try await Qualtive.Entry.post(
-  to: ("my-company", "my-question"),
+try await PostController().post(
+  to: "my-company/my-enquiry",
   content: [
     .score(.init(value: 75)),
-    .title(.init(value: "What are your thoughts on this feature?")),
+    .title(.init(text: "What are your thoughts on this feature?")),
     .text(.init(value: "It's awesome!")),
   ]
 )
 ```
+
+You can also build empty content from a fetched enquiry:
+
+```swift
+let enquiry = try await EnquiryController().fetch(
+  collection: "my-company/my-enquiry"
+)
+var content = enquiry.entryContentTemplate()
+// fill in user values on `content`, then post
+```
+
+### Controllers
+
+The public API is split into focused controllers you can also inject via protocols for tests or custom UI:
+
+- `EnquiryController` / `EnquiryControllerType` — fetch enquiry definitions
+- `PostController` / `PostControllerType` — post entries
+- `AttachmentController` / `AttachmentControllerType` — upload attachments
+- `StandardAttributesController` / `StandardAttributesControllerType` — device/app attributes collected on post
+- `UserClientIDController` / `UserClientIDControllerType` — persisted per-device client id
+- `LoggingController` / `LoggingControllerType` — diagnostic logging
+
+Default inits wire production networking and related controllers. For custom UI later, pass these into your views.
 
 ### User data
 
 If users can login on your site, you can include a user property describing the user. For example:
 
 ```swift
-try await Qualtive.Entry.post(
-  to: ("my-company", "my-question"),
+try await PostController().post(
+  to: "my-company/my-enquiry",
   content: [
     .score(.init(value: 75)),
   ],
-  user: Qualtive.User(
+  user: User(
     id: "user-123", // Authorized user id. Used to list feedback from the same user.
     name: "John", // User friendly name. Can be the users full name or username. Optional.
     email: "john@gmail.com", // Reachable email adress. Optional.
@@ -81,16 +106,19 @@ try await Qualtive.Entry.post(
 You can also include custom attributes that will be shown up on qualtive.io. For example:
 
 ```swift
-try await Qualtive.Entry.post(
-  to: ("my-company", "my-question"),
+try await PostController().post(
+  to: "my-company/my-enquiry",
   content: [
     .score(.init(value: 75)),
   ],
   customAttributes: [
     "Age": "32",
+    .language: "en",
   ]
 )
 ```
+
+`Attributes` is dictionary-backed and expressible by dictionary literal, with typed keys such as `.platform`, `.os`, and `.appId`.
 
 ## Supported platforms
 

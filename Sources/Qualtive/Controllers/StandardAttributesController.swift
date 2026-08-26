@@ -4,32 +4,49 @@ import Foundation
   import UIKit
 #endif
 
-struct Attributes {
+/// Produces the standard device/app attributes collected when posting feedback.
+public protocol StandardAttributesControllerType: Sendable {
 
-  private init() {}
+  func makeAttributes(locale: Locale) async -> Attributes
+}
 
-  static func defaultAttributes(locale: Locale) async -> [String: String] {
-    var attributes: [String: String] = [:]
+extension StandardAttributesControllerType {
 
-    if let attribute = platform() { attributes["Platform"] = attribute }
+  public func makeAttributes() async -> Attributes {
+    await makeAttributes(locale: .current)
+  }
+}
 
-    if let attribute = os() { attributes["OS"] = attribute }
-    if let attribute = osVersion() { attributes["OS Version"] = attribute }
+/// Collects platform, device, app, and locale attributes.
+public struct StandardAttributesController: StandardAttributesControllerType {
 
-    if let attribute = deviceModel() { attributes["Device Model"] = attribute }
-    if let attribute = await deviceType() { attributes["Device Type"] = attribute }
+  public init() {}
 
-    if let attribute = appIdentifier() { attributes["App ID"] = attribute }
-    if let attribute = appVersion() { attributes["App Version"] = attribute }
-    if let attribute = appBuild() { attributes["App Build"] = attribute }
+  public func makeAttributes(locale: Locale) async -> Attributes {
+    var attributes = Attributes()
 
-    if let attribute = language(locale: locale) { attributes["Language"] = attribute }
-    if let attribute = region(locale: locale) { attributes["Region"] = attribute }
+    if let value = platform() { attributes[.platform] = value }
+
+    if let value = os() { attributes[.os] = value }
+    if let value = osVersion() { attributes[.osVersion] = value }
+
+    if let value = deviceModel() { attributes[.deviceModel] = value }
+    if let value = await deviceType() { attributes[.deviceType] = value }
+
+    if let value = appIdentifier() { attributes[.appId] = value }
+    if let value = appVersion() { attributes[.appVersion] = value }
+    if let value = appBuild() { attributes[.appBuild] = value }
+
+    if let value = language(locale: locale) { attributes[.language] = value }
+    if let value = region(locale: locale) { attributes[.region] = value }
 
     return attributes
   }
+}
 
-  private static func platform() -> String? {
+extension StandardAttributesController {
+
+  private func platform() -> String? {
     #if os(iOS)
       return "iOS"
     #elseif os(macOS)
@@ -37,13 +54,13 @@ struct Attributes {
     #elseif os(tvOS)
       return "tvOS"
     #elseif os(watchOS)
-      return "iOS"  // Can be discuessed. Often bundeled with iOS app.
+      return "iOS"  // Can be discussed. Often bundled with iOS app.
     #else
       return nil
     #endif
   }
 
-  private static func os() -> String? {
+  private func os() -> String? {
     #if os(iOS)
       return "iOS"
     #elseif os(macOS)
@@ -56,13 +73,13 @@ struct Attributes {
       return nil
     #endif
   }
-  private static func osVersion() -> String? {
+
+  private func osVersion() -> String? {
     let version = ProcessInfo.processInfo.operatingSystemVersion
     return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
   }
 
-  private static func deviceModel() -> String? {
-
+  private func deviceModel() -> String? {
     func hwmodel() -> String? {
       var count = 0
       sysctlbyname("hw.model", nil, &count, nil, 0)
@@ -95,7 +112,8 @@ struct Attributes {
       return systemInfo()
     #endif
   }
-  private static func deviceType() async -> String? {
+
+  private func deviceType() async -> String? {
     #if os(iOS)
       switch await UIDevice.current.userInterfaceIdiom {
       case .phone:
@@ -126,20 +144,23 @@ struct Attributes {
     #endif
   }
 
-  private static func appIdentifier() -> String? {
+  private func appIdentifier() -> String? {
     Bundle.main.bundleIdentifier
   }
-  private static func appVersion() -> String? {
+
+  private func appVersion() -> String? {
     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
   }
-  private static func appBuild() -> String? {
+
+  private func appBuild() -> String? {
     Bundle.main.infoDictionary?["CFBundleVersion"] as? String
   }
 
-  private static func language(locale: Locale) -> String? {
+  private func language(locale: Locale) -> String? {
     locale.languageCode
   }
-  private static func region(locale: Locale) -> String? {
+
+  private func region(locale: Locale) -> String? {
     locale.regionCode
   }
 }
