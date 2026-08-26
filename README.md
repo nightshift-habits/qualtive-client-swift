@@ -16,13 +16,6 @@ If you are using Xcode, you can use ”Add Package Dependency…” from the men
 https://github.com/nightshift-habits/qualtive-client-swift.git
 ```
 
-### Using CocoaPods
-
-Add the following to your Podifle and then run `pod install` in the terminal:
-```
-pod 'Qualtive', '~> 1'
-```
-
 ## Usage
 
 First of all, make sure you have created a question on [qualtive.io](https://qualtive.io). Each feedback entry is posted to a so called collection (ID) which can be found in the question page.
@@ -105,10 +98,10 @@ Qualtive.Entry.post(
 
 The following platforms are officially supported:
 
-- iOS
-- iPadOS
-- macOS
-- tvOS
-- watchOS
+- iOS 15+
+- iPadOS 15+
+- macOS 12+
+- tvOS 15+ (API only)
+- watchOS 8+ (API only)
 
 This library should also be able to run on Linux and other Swift-supported platforms, but these are not offically supported.

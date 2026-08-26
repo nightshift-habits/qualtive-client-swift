@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+- Dropped CocoaPods support. Swift Package Manager is the only supported installation method. 1.5.0 remains the last CocoaPods release.
+- Raised minimum platforms to iOS 15, iPadOS 15, macOS 12, tvOS 15, and watchOS 8.
+
 ## 1.5.0
 
 ### Added
