@@ -33,41 +33,5 @@ extension Score {
 
     /// 11 user options displayed as a range of numbers starting with 0 and ending on 10
     case nps(leadingText: String, trailingText: String)
-
-    init?(json root: [String: Any]) throws {
-      guard let type = root["scoreType"] as? String else {
-        throw ParseError(debugMessage: "Score type is not a string")
-      }
-
-      switch type {
-      case "smilies5":
-        self = .smilies5
-      case "smilies3":
-        self = .smilies3
-      case "thumbs":
-        self = .thumbs
-      case "nps":
-        self = .nps(
-          leadingText: root["leadingText"] as? String ?? "",
-          trailingText: root["trailingText"] as? String ?? ""
-        )
-      default:
-        logHintNewVersion()
-        return nil
-      }
-    }
-
-    var json: [String: Any] {
-      switch self {
-      case .smilies5:
-        return ["scoreType": "smilies5"]
-      case .smilies3:
-        return ["scoreType": "smilies3"]
-      case .thumbs:
-        return ["scoreType": "thumbs"]
-      case .nps(let leadingText, let trailingText):
-        return ["scoreType": "nps", "leadingText": leadingText, "trailingText": trailingText]
-      }
-    }
   }
 }
