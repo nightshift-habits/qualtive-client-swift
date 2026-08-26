@@ -107,7 +107,7 @@ public struct Entry: Sendable {
     }
 
     do {
-      var attributes = Attributes.defaultAttributes(locale: locale)
+      var attributes = await Attributes.defaultAttributes(locale: locale)
       for (key, value) in customAttributes {
         attributes[key] = value
       }
