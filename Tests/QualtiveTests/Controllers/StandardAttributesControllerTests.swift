@@ -1,24 +1,26 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class StandardAttributesControllerTests: XCTestCase {
+@Suite
+struct StandardAttributesControllerTests {
 
-  func testMakeAttributesIncludesLocale() async {
+  @Test func `should include locale in attributes`() async {
     let controller = StandardAttributesController()
     let attributes = await controller.makeAttributes(
       locale: Locale(identifier: "sv_SE")
     )
 
-    XCTAssertEqual(attributes[.language], "sv")
-    XCTAssertEqual(attributes[.region], "SE")
-    XCTAssertNotNil(attributes[.os])
-    XCTAssertNotNil(attributes[.osVersion])
-    XCTAssertNotNil(attributes[.platform])
+    #expect(attributes[.language] == "sv")
+    #expect(attributes[.region] == "SE")
+    #expect(attributes[.os] != nil)
+    #expect(attributes[.osVersion] != nil)
+    #expect(attributes[.platform] != nil)
   }
 
-  func testMakeAttributesDefaultLocale() async {
+  @Test func `should make attributes with the default locale`() async {
     let attributes = await StandardAttributesController().makeAttributes()
-    XCTAssertFalse(attributes.dictionary.isEmpty)
+    #expect(!attributes.dictionary.isEmpty)
   }
 }

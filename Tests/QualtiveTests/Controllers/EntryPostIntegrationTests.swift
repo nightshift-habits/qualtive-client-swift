@@ -1,10 +1,12 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class EntryPostIntegrationTests: XCTestCase {
+@Suite
+struct EntryPostIntegrationTests {
 
-  func testPostSuccess() async throws {
+  @Test func `should post an entry`() async throws {
     let entry = try await PostController()
       .post(
         to: "ci-test/swift",
@@ -18,11 +20,11 @@ final class EntryPostIntegrationTests: XCTestCase {
         customAttributes: ["Age": "23"]
       )
 
-    XCTAssertGreaterThan(entry.id, 0)
+    #expect(entry.id > 0)
   }
 
-  func testPostNotFound() async throws {
-    do {
+  @Test func `should throw when enquiry is not found`() async {
+    await #expect {
       _ = try await PostController()
         .post(
           to: "ci-test/not-found",
@@ -31,22 +33,21 @@ final class EntryPostIntegrationTests: XCTestCase {
             .text(.init(value: "Hello world!")),
           ]
         )
-      XCTFail("Expected not found error")
-    } catch let error as PostController.PostError {
-      if case .enquiryNotFound = error {
-        return
+    } throws: { error in
+      guard let error = error as? PostController.PostError, case .enquiryNotFound = error else {
+        return false
       }
-      XCTFail("\(error)")
+      return true
     }
   }
 
-  func testPostConnectionError() async throws {
+  @Test func `should throw on connection error`() async {
     let postController = PostController(
       networkController: NetworkController(
         baseURL: URL(string: "https://does-not-exists-qualtive.io/")!
       )
     )
-    do {
+    await #expect {
       _ = try await postController.post(
         to: "ci-test/swift",
         content: [
@@ -54,12 +55,12 @@ final class EntryPostIntegrationTests: XCTestCase {
           .text(.init(value: "Hello world!")),
         ]
       )
-      XCTFail("Expected connection error")
-    } catch let error as PostController.PostError {
-      if case .network(.connection) = error {
-        return
+    } throws: { error in
+      guard let error = error as? PostController.PostError, case .network(.connection) = error
+      else {
+        return false
       }
-      XCTFail("\(error)")
+      return true
     }
   }
 }

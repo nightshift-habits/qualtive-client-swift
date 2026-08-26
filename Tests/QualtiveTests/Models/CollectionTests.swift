@@ -1,52 +1,53 @@
-import XCTest
+import Testing
 
 @testable import Qualtive
 
-final class CollectionTests: XCTestCase {
+@Suite
+struct CollectionTests {
 
-  func testStringLiteral() {
+  @Test func `should parse a string literal`() {
     let collection: Collection = "ci-test/swift"
-    XCTAssertEqual(collection.containerId, "ci-test")
-    XCTAssertEqual(collection.enquiryId, "swift")
+    #expect(collection.containerId == "ci-test")
+    #expect(collection.enquiryId == "swift")
   }
 
-  func testInitWithTypedIds() {
+  @Test func `should initialize with typed ids`() {
     let collection = Collection(containerId: "ci-test", enquiryId: "swift")
-    XCTAssertEqual(collection.containerId.rawValue, "ci-test")
-    XCTAssertEqual(collection.enquiryId.rawValue, "swift")
+    #expect(collection.containerId.rawValue == "ci-test")
+    #expect(collection.enquiryId.rawValue == "swift")
   }
 
-  func testEnquiryIdFromIntegerLiteral() {
+  @Test func `should create enquiry id from integer literal`() {
     let enquiryId: EnquiryId = 6290486614556672
-    XCTAssertEqual(enquiryId.rawValue, "6290486614556672")
+    #expect(enquiryId.rawValue == "6290486614556672")
 
     let collection = Collection(containerId: "ci-test", enquiryId: 6290486614556672)
-    XCTAssertEqual(collection.enquiryId.rawValue, "6290486614556672")
+    #expect(collection.enquiryId.rawValue == "6290486614556672")
   }
 
-  func testEnquiryIdFromStringLiteral() {
+  @Test func `should create enquiry id from string literal`() {
     let enquiryId: EnquiryId = "swift"
-    XCTAssertEqual(enquiryId.rawValue, "swift")
+    #expect(enquiryId.rawValue == "swift")
   }
 
-  func testContainerIdFromStringLiteral() {
+  @Test func `should create container id from string literal`() {
     let containerId: ContainerId = "ci-test"
-    XCTAssertEqual(containerId.rawValue, "ci-test")
+    #expect(containerId.rawValue == "ci-test")
   }
 
-  func testHashable() {
+  @Test func `should be hashable`() {
     let a: Collection = "a/b"
     let b: Collection = "a/b"
     let c: Collection = "a/c"
-    XCTAssertEqual(a, b)
-    XCTAssertNotEqual(a, c)
+    #expect(a == b)
+    #expect(a != c)
   }
 
-  func testStringLiteralRequiresSeparator() {
+  @Test func `should parse a string literal with a separator`() {
     // Exercise the happy path already covered; invalid literals cannot be
     // unit-tested without crashing the process (fatalError by design).
     let collection: Collection = "container/enquiry"
-    XCTAssertEqual(collection.containerId.rawValue, "container")
-    XCTAssertEqual(collection.enquiryId.rawValue, "enquiry")
+    #expect(collection.containerId.rawValue == "container")
+    #expect(collection.enquiryId.rawValue == "enquiry")
   }
 }

@@ -1,14 +1,16 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class NetworkControllerTests: XCTestCase {
+@Suite
+struct NetworkControllerTests {
 
   private struct SampleResponse: Decodable, Equatable {
     let id: Int
   }
 
-  func testSendDecodableSuccess() async throws {
+  @Test func `should send and decode a successful response`() async throws {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       (jsonData(["id": 42] as TestJSON), makeHTTPURLResponse(statusCode: 200))
@@ -20,109 +22,110 @@ final class NetworkControllerTests: XCTestCase {
       containerId: "ci-test"
     )
 
-    XCTAssertEqual(result, SampleResponse(id: 42))
+    #expect(result == SampleResponse(id: 42))
   }
 
-  func testSendDecodableInvalidJSON() async throws {
+  @Test func `should throw when response JSON is invalid`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       ("not-json".data(using: .utf8)!, makeHTTPURLResponse(statusCode: 200))
     }
 
-    do {
+    await #expect {
       let _: SampleResponse = try await mock.send(
         method: "GET",
         path: "/sample/",
         containerId: "ci-test"
       )
-      XCTFail("Expected error")
-    } catch let error as NetworkError {
-      if case .unexpected = error {
-        return
+    } throws: { error in
+      guard let error = error as? NetworkError, case .unexpected = error else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 
-  func testSendDecodableNotFound() async throws {
+  @Test func `should throw not found for 404`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 404))
     }
 
-    do {
+    await #expect {
       let _: SampleResponse = try await mock.send(
         method: "GET",
         path: "/sample/",
         containerId: "ci-test"
       )
-      XCTFail("Expected error")
-    } catch let error as NetworkError {
-      XCTAssertEqual(error.isNotFound, true)
+    } throws: { error in
+      guard let error = error as? NetworkError, case .notFound = error else {
+        return false
+      }
+      return true
     }
   }
 
-  func testSendDecodableRemoteMaintenance() async throws {
+  @Test func `should throw remote maintenance for 503`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 503))
     }
 
-    do {
+    await #expect {
       let _: SampleResponse = try await mock.send(
         method: "GET",
         path: "/sample/",
         containerId: "ci-test"
       )
-      XCTFail("Expected error")
-    } catch let error as NetworkError {
-      XCTAssertEqual(error.isRemoteMaintenance, true)
+    } throws: { error in
+      guard let error = error as? NetworkError, case .remoteMaintenance = error else {
+        return false
+      }
+      return true
     }
   }
 
-  func testSendDecodableOtherStatus() async throws {
+  @Test func `should throw unexpected for other status codes`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 500))
     }
 
-    do {
+    await #expect {
       let _: SampleResponse = try await mock.send(
         method: "GET",
         path: "/sample/",
         containerId: "ci-test"
       )
-      XCTFail("Expected error")
-    } catch let error as NetworkError {
-      if case .unexpected = error {
-        return
+    } throws: { error in
+      guard let error = error as? NetworkError, case .unexpected = error else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 
-  func testSendDecodableConnectionError() async throws {
+  @Test func `should throw connection error`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       throw URLError(.notConnectedToInternet)
     }
 
-    do {
+    await #expect {
       let _: SampleResponse = try await mock.send(
         method: "GET",
         path: "/sample/",
         containerId: "ci-test"
       )
-      XCTFail("Expected error")
-    } catch let error as NetworkError {
-      if case .connection = error {
-        return
+    } throws: { error in
+      guard let error = error as? NetworkError, case .connection = error else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 
-  func testNetworkControllerBuildsRequest() async throws {
+  @Test func `should build the request`() async throws {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.protocolClasses = [RecordingURLProtocol.self]
     let session = URLSession(configuration: configuration)
@@ -132,11 +135,11 @@ final class NetworkControllerTests: XCTestCase {
     )
 
     RecordingURLProtocol.handler = { request in
-      XCTAssertEqual(request.url?.absoluteString, "https://example.test/feedback/enquiries/swift/")
-      XCTAssertEqual(request.httpMethod, "GET")
-      XCTAssertEqual(request.value(forHTTPHeaderField: "X-Container"), "ci-test")
-      XCTAssertEqual(request.value(forHTTPHeaderField: "Accept-Language"), "en-US")
-      XCTAssertEqual(request.httpBodyStream != nil || request.httpBody != nil, false)
+      #expect(request.url?.absoluteString == "https://example.test/feedback/enquiries/swift/")
+      #expect(request.httpMethod == "GET")
+      #expect(request.value(forHTTPHeaderField: "X-Container") == "ci-test")
+      #expect(request.value(forHTTPHeaderField: "Accept-Language") == "en-US")
+      #expect(request.httpBodyStream == nil && request.httpBody == nil)
 
       let response = HTTPURLResponse(
         url: request.url!,
@@ -162,7 +165,7 @@ final class NetworkControllerTests: XCTestCase {
       containerId: "ci-test",
       headers: ["Accept-Language": "en-US"]
     )
-    XCTAssertEqual(enquiry.slug, "swift")
+    #expect(enquiry.slug == "swift")
   }
 }
 
@@ -194,16 +197,4 @@ private final class RecordingURLProtocol: URLProtocol, @unchecked Sendable {
   }
 
   override func stopLoading() {}
-}
-
-extension NetworkError {
-  fileprivate var isNotFound: Bool {
-    if case .notFound = self { return true }
-    return false
-  }
-
-  fileprivate var isRemoteMaintenance: Bool {
-    if case .remoteMaintenance = self { return true }
-    return false
-  }
 }

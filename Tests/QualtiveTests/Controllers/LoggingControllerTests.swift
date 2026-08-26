@@ -1,10 +1,12 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class LoggingControllerTests: XCTestCase {
+@Suite
+struct LoggingControllerTests {
 
-  func testUnknownContentTypeLogsHint() throws {
+  @Test func `should log a hint for unknown content type`() throws {
     let loggingController = MockLoggingController()
     let decoder = JSONDecoder()
     decoder.userInfo[CodingUserInfoKey.loggingController] = loggingController
@@ -27,11 +29,11 @@ final class LoggingControllerTests: XCTestCase {
       )
     )
 
-    XCTAssertEqual(enquiry.pages[0].content.count, 0)
-    XCTAssertEqual(loggingController.hintNewVersionCallCount, 1)
+    #expect(enquiry.pages[0].content.count == 0)
+    #expect(loggingController.hintNewVersionCallCount == 1)
   }
 
-  func testUnknownScoreTypeLogsHint() throws {
+  @Test func `should log a hint for unknown score type`() throws {
     let loggingController = MockLoggingController()
     let decoder = JSONDecoder()
     decoder.userInfo[CodingUserInfoKey.loggingController] = loggingController
@@ -54,8 +56,8 @@ final class LoggingControllerTests: XCTestCase {
       )
     )
 
-    XCTAssertEqual(enquiry.pages[0].content.count, 0)
-    XCTAssertEqual(loggingController.hintNewVersionCallCount, 1)
+    #expect(enquiry.pages[0].content.count == 0)
+    #expect(loggingController.hintNewVersionCallCount == 1)
   }
 }
 

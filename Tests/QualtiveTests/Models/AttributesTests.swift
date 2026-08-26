@@ -1,65 +1,66 @@
-import XCTest
+import Testing
 
 @testable import Qualtive
 
-final class AttributesTests: XCTestCase {
+@Suite
+struct AttributesTests {
 
-  func testDictionaryLiteralWithTypedKeys() {
+  @Test func `should support dictionary literal with typed keys`() {
     let attributes: Attributes = [
       .platform: "iOS",
       "Age": "32",
     ]
 
-    XCTAssertEqual(attributes[.platform], "iOS")
-    XCTAssertEqual(attributes["Age"], "32")
-    XCTAssertEqual(attributes[.appId], nil)
+    #expect(attributes[.platform] == "iOS")
+    #expect(attributes["Age"] == "32")
+    #expect(attributes[.appId] == nil)
   }
 
-  func testInitFromStringDictionary() {
+  @Test func `should initialize from a string dictionary`() {
     let attributes = Attributes(["Platform": "macOS", "Region": "SE"])
-    XCTAssertEqual(attributes[.platform], "macOS")
-    XCTAssertEqual(attributes[.region], "SE")
-    XCTAssertEqual(
-      attributes.dictionary,
-      ["Platform": "macOS", "Region": "SE"]
+    #expect(attributes[.platform] == "macOS")
+    #expect(attributes[.region] == "SE")
+    #expect(
+      attributes.dictionary
+        == ["Platform": "macOS", "Region": "SE"]
     )
   }
 
-  func testInitFromKeyedDictionary() {
+  @Test func `should initialize from a keyed dictionary`() {
     let attributes = Attributes([
       .os: "iOS",
       .language: "en",
     ])
-    XCTAssertEqual(attributes[.os], "iOS")
-    XCTAssertEqual(attributes[.language], "en")
+    #expect(attributes[.os] == "iOS")
+    #expect(attributes[.language] == "en")
   }
 
-  func testSubscriptSet() {
+  @Test func `should set values via subscript`() {
     var attributes = Attributes()
     attributes[.deviceType] = "Phone"
     attributes["Custom"] = "Value"
-    XCTAssertEqual(attributes[.deviceType], "Phone")
-    XCTAssertEqual(attributes["Custom"], "Value")
+    #expect(attributes[.deviceType] == "Phone")
+    #expect(attributes["Custom"] == "Value")
   }
 
-  func testMergeReplacesExistingKeys() {
+  @Test func `should replace existing keys when merging`() {
     var attributes: Attributes = [.platform: "iOS", "Age": "30"]
     attributes.merge([.platform: "macOS", "Age": "32", .region: "SE"])
-    XCTAssertEqual(attributes[.platform], "macOS")
-    XCTAssertEqual(attributes["Age"], "32")
-    XCTAssertEqual(attributes[.region], "SE")
+    #expect(attributes[.platform] == "macOS")
+    #expect(attributes["Age"] == "32")
+    #expect(attributes[.region] == "SE")
   }
 
-  func testMergingReturnsCopy() {
+  @Test func `should return a copy when merging`() {
     let attributes: Attributes = [.os: "iOS"]
     let merged = attributes.merging(["Age": "23"])
-    XCTAssertEqual(attributes.dictionary, ["OS": "iOS"])
-    XCTAssertEqual(merged.dictionary, ["OS": "iOS", "Age": "23"])
+    #expect(attributes.dictionary == ["OS": "iOS"])
+    #expect(merged.dictionary == ["OS": "iOS", "Age": "23"])
   }
 
-  func testKeyExpressibleByStringLiteral() {
+  @Test func `should express keys as string literals`() {
     let key: Attributes.Key = "Custom Key"
-    XCTAssertEqual(key.rawValue, "Custom Key")
-    XCTAssertEqual(Attributes.Key.platform.rawValue, "Platform")
+    #expect(key.rawValue == "Custom Key")
+    #expect(Attributes.Key.platform.rawValue == "Platform")
   }
 }

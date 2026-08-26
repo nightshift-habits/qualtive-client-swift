@@ -1,43 +1,44 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class EnquiryFetchIntegrationTests: XCTestCase {
+@Suite
+struct EnquiryFetchIntegrationTests {
 
-  func testFetchSuccess() async throws {
+  @Test func `should fetch an enquiry`() async throws {
     let enquiry = try await EnquiryController().fetch(collection: "ci-test/swift")
 
-    XCTAssertEqual(enquiry.slug, "swift")
-    XCTAssertGreaterThan(enquiry.id, 0)
-    XCTAssertFalse(enquiry.pages.isEmpty)
+    #expect(enquiry.slug == "swift")
+    #expect(enquiry.id > 0)
+    #expect(!enquiry.pages.isEmpty)
   }
 
-  func testFetchNotFound() async throws {
-    do {
+  @Test func `should throw when enquiry is not found`() async {
+    await #expect {
       _ = try await EnquiryController().fetch(collection: "ci-test/not-found")
-      XCTFail("Expected not found error")
-    } catch let error as EnquiryController.FetchError {
-      if case .notFound = error {
-        return
+    } throws: { error in
+      guard let error = error as? EnquiryController.FetchError, case .notFound = error else {
+        return false
       }
-      XCTFail("\(error)")
+      return true
     }
   }
 
-  func testFetchConnectionError() async throws {
+  @Test func `should throw on connection error`() async {
     let enquiryController = EnquiryController(
       networkController: NetworkController(
         baseURL: URL(string: "https://does-not-exists-qualtive.io/")!
       )
     )
-    do {
+    await #expect {
       _ = try await enquiryController.fetch(collection: "ci-test/swift")
-      XCTFail("Expected connection error")
-    } catch let error as EnquiryController.FetchError {
-      if case .network(.connection) = error {
-        return
+    } throws: { error in
+      guard let error = error as? EnquiryController.FetchError, case .network(.connection) = error
+      else {
+        return false
       }
-      XCTFail("\(error)")
+      return true
     }
   }
 }
