@@ -1,9 +1,7 @@
 import Foundation
 
-public struct User: Sendable {
-
-  /// Uniq client id for this device.
-  public let clientId: String
+/// Authorized / logged-in user metadata included when posting an entry.
+public struct User: Sendable, Hashable {
 
   /// Your company defined user id.
   public var id: String?
@@ -20,20 +18,8 @@ public struct User: Sendable {
   ///   - name: Name or alias for the user.
   ///   - email: Reachable email for the user.
   public init(id: String? = nil, name: String? = nil, email: String? = nil) {
-    self.clientId = Self.clientId
     self.id = id
     self.name = name
     self.email = email
   }
-
-  /// Uniq client id for this device.
-  public static let clientId: String = {
-    let key = "_qualtiveCID"
-    if let existing = UserDefaults.standard.object(forKey: key) as? String {
-      return existing
-    }
-    let id = UUID().uuidString
-    UserDefaults.standard.set(id, forKey: key)
-    return id
-  }()
 }

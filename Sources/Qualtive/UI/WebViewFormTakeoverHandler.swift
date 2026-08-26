@@ -39,7 +39,10 @@
       guard rawCollection.count >= 2 else {
         return (nil, "Collection is invalid")
       }
-      let collection: Collection = (rawCollection[0], rawCollection[1])
+      let collection = Collection(
+        containerId: ContainerId(rawCollection[0]),
+        enquiryId: EnquiryId(rawCollection[1])
+      )
 
       do {
         let entry = try await withCheckedThrowingContinuation { present(collection, $0) }
