@@ -59,6 +59,10 @@ struct LoggingControllerTests {
     #expect(enquiry.pages[0].content.count == 0)
     #expect(loggingController.hintNewVersionCallCount == 1)
   }
+
+  @Test func `should log a hint through the default controller`() {
+    LoggingController().logHintNewVersion()
+  }
 }
 
 private final class MockLoggingController: LoggingControllerType, @unchecked Sendable {

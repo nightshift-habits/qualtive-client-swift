@@ -47,6 +47,29 @@ struct PostControllerTests {
     #expect(entry.id == 123)
   }
 
+  @Test func `should post with a user`() async throws {
+    let mock = MockNetworkController()
+    mock.pathHandler = { _, _, _, _, body in
+      let posted = decodeJSON(PostedEntryBody.self, from: body!)
+      #expect(posted.user.id == "user-1")
+      #expect(posted.user.name == "Ada")
+      #expect(posted.user.email == "ada@example.com")
+      return (jsonData(EntryIDResponse(id: 5)), makeHTTPURLResponse(statusCode: 200))
+    }
+
+    let postController = PostController(
+      networkController: mock,
+      standardAttributesController: MockStandardAttributesController(attributes: [:]),
+      userClientIDController: MockUserClientIDController(clientId: "cid")
+    )
+    let entry = try await postController.post(
+      to: "ci-test/swift",
+      content: [.text(.init(value: "Hi"))],
+      user: User(id: "user-1", name: "Ada", email: "ada@example.com")
+    )
+    #expect(entry.id == 5)
+  }
+
   @Test func `should throw when enquiry is not found`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
@@ -101,6 +124,9 @@ private struct PostedEntryBody: Decodable {
 
   struct UserBody: Decodable {
     let clientId: String
+    let id: String?
+    let name: String?
+    let email: String?
   }
 
   struct ContentItem: Decodable {

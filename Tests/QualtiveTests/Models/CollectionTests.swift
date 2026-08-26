@@ -50,4 +50,14 @@ struct CollectionTests {
     #expect(collection.containerId.rawValue == "container")
     #expect(collection.enquiryId.rawValue == "enquiry")
   }
+
+  @Test func `should describe typed ids`() {
+    #expect(ContainerId("ci-test").description == "ci-test")
+    #expect(EnquiryId("swift").description == "swift")
+  }
+
+  @Test func `should create enquiry id from a binary integer`() {
+    let enquiryId = EnquiryId(UInt64(42))
+    #expect(enquiryId.rawValue == "42")
+  }
 }

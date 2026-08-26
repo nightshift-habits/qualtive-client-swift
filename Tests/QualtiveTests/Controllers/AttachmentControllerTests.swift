@@ -38,6 +38,56 @@ struct AttachmentControllerTests {
     #expect(mock.recordedRequests.count == 2)
   }
 
+  @Test func `should create a jpeg attachment`() async throws {
+    let uploadURL = URL(string: "https://uploads.example/put")!
+    let mock = MockNetworkController()
+    mock.pathHandler = { method, path, containerId, headers, body in
+      #expect(method == "POST")
+      let request = decodeJSON(CreateAttachmentBody.self, from: body!)
+      #expect(request.contentType == "image/jpeg")
+      return (
+        jsonData(CreatedAttachmentBody(id: 3, uploadUrl: uploadURL.absoluteString)),
+        makeHTTPURLResponse(statusCode: 200)
+      )
+    }
+    mock.urlHandler = { method, url, headers, body in
+      #expect(headers["Content-Type"] == "image/jpeg")
+      return (Data(), makeHTTPURLResponse(url: uploadURL, statusCode: 200))
+    }
+
+    let attachment = try await AttachmentController(networkController: mock)
+      .create(
+        from: .data(Data([0xFF, 0xD8]), kind: .jpeg),
+        to: "ci-test"
+      )
+    #expect(attachment.id == 3)
+  }
+
+  @Test func `should throw when the upload url is invalid`() async {
+    let mock = MockNetworkController()
+    mock.pathHandler = { _, _, _, _, _ in
+      (
+        jsonData(CreatedAttachmentBody(id: 1, uploadUrl: "")),
+        makeHTTPURLResponse(statusCode: 200)
+      )
+    }
+
+    let attachmentController = AttachmentController(networkController: mock)
+    await #expect {
+      _ = try await attachmentController.create(
+        from: .data(Data(), kind: .png),
+        to: "ci-test"
+      )
+    } throws: { error in
+      guard let error = error as? AttachmentController.UploadError,
+        case .network(.unexpected) = error
+      else {
+        return false
+      }
+      return true
+    }
+  }
+
   @Test func `should throw when the create step fails`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
@@ -48,6 +98,35 @@ struct AttachmentControllerTests {
     await #expect {
       _ = try await attachmentController.create(
         from: .data(Data(), kind: .jpeg),
+        to: "ci-test"
+      )
+    } throws: { error in
+      guard let error = error as? AttachmentController.UploadError,
+        case .network(.remoteMaintenance) = error
+      else {
+        return false
+      }
+      return true
+    }
+  }
+
+  @Test func `should throw remote maintenance when the put step returns 503`() async {
+    let uploadURL = URL(string: "https://uploads.example/put")!
+    let mock = MockNetworkController()
+    mock.pathHandler = { _, _, _, _, _ in
+      (
+        jsonData(CreatedAttachmentBody(id: 1, uploadUrl: uploadURL.absoluteString)),
+        makeHTTPURLResponse(statusCode: 200)
+      )
+    }
+    mock.urlHandler = { _, _, _, _ in
+      (Data(), makeHTTPURLResponse(url: uploadURL, statusCode: 503))
+    }
+
+    let attachmentController = AttachmentController(networkController: mock)
+    await #expect {
+      _ = try await attachmentController.create(
+        from: .data(Data(), kind: .png),
         to: "ci-test"
       )
     } throws: { error in

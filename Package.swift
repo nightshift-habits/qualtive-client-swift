@@ -27,7 +27,11 @@ let package = Package(
     ),
     .testTarget(
       name: "QualtiveTests",
-      dependencies: ["Qualtive"]
+      dependencies: ["Qualtive"],
+      resources: [
+        .process("Resources/1px.png"),
+        .process("UI/form-takeover.html"),
+      ]
     ),
   ]
 )

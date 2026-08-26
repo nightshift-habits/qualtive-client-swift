@@ -1,6 +1,7 @@
 .DS_Store
 /.build
 /.derivedData
+/.coverageDerivedData
 /Packages
 /*.xcodeproj
 xcuserdata/

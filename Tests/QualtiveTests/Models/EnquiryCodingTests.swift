@@ -165,6 +165,106 @@ struct EnquiryCodingTests {
     }
   }
 
+  @Test func `should decode smilies3 score content`() throws {
+    let result = try decodeEnquiryWithContent([
+      ["type": "score", "scoreType": "smilies3"]
+    ])
+    if case .score(let content) = result.pages[0].content[0] {
+      if case .smilies3 = content.kind {
+      } else {
+        Issue.record("Expected smilies3")
+      }
+    } else {
+      Issue.record("Expected score")
+    }
+  }
+
+  @Test func `should decode thumbs score content`() throws {
+    let result = try decodeEnquiryWithContent([
+      ["type": "score", "scoreType": "thumbs"]
+    ])
+    if case .score(let content) = result.pages[0].content[0] {
+      if case .thumbs = content.kind {
+      } else {
+        Issue.record("Expected thumbs")
+      }
+    } else {
+      Issue.record("Expected score")
+    }
+  }
+
+  @Test func `should decode nps score content`() throws {
+    let result = try decodeEnquiryWithContent([
+      [
+        "type": "score",
+        "scoreType": "nps",
+        "leadingText": "Low",
+        "trailingText": "High",
+      ]
+    ])
+    if case .score(let content) = result.pages[0].content[0] {
+      if case .nps(let leadingText, let trailingText) = content.kind {
+        #expect(leadingText == "Low")
+        #expect(trailingText == "High")
+      } else {
+        Issue.record("Expected nps")
+      }
+    } else {
+      Issue.record("Expected score")
+    }
+  }
+
+  @Test func `should default nps labels when missing`() throws {
+    let result = try decodeEnquiryWithContent([
+      ["type": "score", "scoreType": "nps"]
+    ])
+    if case .score(let content) = result.pages[0].content[0] {
+      if case .nps(let leadingText, let trailingText) = content.kind {
+        #expect(leadingText == "")
+        #expect(trailingText == "")
+      } else {
+        Issue.record("Expected nps")
+      }
+    } else {
+      Issue.record("Expected score")
+    }
+  }
+
+  @Test func `should flatten all content kinds into an entry content template`() throws {
+    let enquiry = try decodeEnquiryWithContent(
+      [
+        ["type": "title", "text": "Title"],
+        ["type": "score", "scoreType": "smilies5"],
+        ["type": "text", "placeholder": "Write"],
+        ["type": "select", "options": ["A"]],
+        ["type": "multiselect", "options": ["B"]],
+        ["type": "attachments"],
+      ] as TestJSON
+    )
+    let template = enquiry.entryContentTemplate()
+    #expect(template.count == 6)
+    if case .select(let content) = template[3] {
+      #expect(content.definition.options == ["A"])
+    } else {
+      Issue.record("Expected select")
+    }
+    if case .multiselect(let content) = template[4] {
+      #expect(content.definition.options == ["B"])
+    } else {
+      Issue.record("Expected multiselect")
+    }
+    if case .attachments(let content) = template[5] {
+      #expect(content.values.isEmpty)
+    } else {
+      Issue.record("Expected attachments")
+    }
+  }
+
+  @Test func `should initialize a page from content`() {
+    let page = Enquiry.Page(content: [.title(.init(text: "Hi"))])
+    #expect(page.content.count == 1)
+  }
+
   @Test func `should flatten pages into an entry content template`() throws {
     let enquiry = try JSONDecoder()
       .decode(
