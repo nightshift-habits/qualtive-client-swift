@@ -3,7 +3,6 @@
 
   extension WKWebView {
 
-    @available(iOS 14.0, macOS 11.0, *)
     public func handleQualtiveFormTakeover(
       didPresent present: @escaping (Collection, CheckedContinuation<Entry, Error>) -> Void
     ) {
@@ -15,7 +14,6 @@
     }
   }
 
-  @available(iOS 14.0, macOS 11.0, *)
   private final class ScriptMessageHandler: NSObject, WKScriptMessageHandlerWithReply {
 
     private let present: (Collection, CheckedContinuation<Entry, Error>) -> Void
