@@ -21,18 +21,18 @@ final class QuestionFetchTests: XCTestCase {
     }
     if question.content.count >= 2 {
       switch question.content[1] {
-      case .text(let content):
-        XCTAssertEqual(content.placeholder, "Write here…")
+      case .title(let content):
+        XCTAssertEqual(content.text, "Thoughts on Swift?")
       default:
-        XCTFail("Expected content 0 to be text")
+        XCTFail("Expected content 1 to be title")
       }
     }
     if question.content.count >= 3 {
       switch question.content[2] {
-      case .title(let content):
-        XCTAssertEqual(content.text, "Thoughts on Swift?")
+      case .text(let content):
+        XCTAssertEqual(content.placeholder, "Write here…")
       default:
-        XCTFail("Expected content 0 to be title")
+        XCTFail("Expected content 2 to be text")
       }
     }
   }
