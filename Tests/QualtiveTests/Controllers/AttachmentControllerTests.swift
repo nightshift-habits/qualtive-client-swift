@@ -1,28 +1,30 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class AttachmentControllerTests: XCTestCase {
+@Suite
+struct AttachmentControllerTests {
 
-  func testCreateSuccess() async throws {
+  @Test func `should create an attachment`() async throws {
     let uploadURL = URL(string: "https://uploads.example/put")!
     let mock = MockNetworkController()
     mock.pathHandler = { method, path, containerId, headers, body in
-      XCTAssertEqual(method, "POST")
-      XCTAssertEqual(path, "/feedback/attachments/")
-      XCTAssertEqual(containerId, "ci-test")
+      #expect(method == "POST")
+      #expect(path == "/feedback/attachments/")
+      #expect(containerId == "ci-test")
       let request = decodeJSON(CreateAttachmentBody.self, from: body!)
-      XCTAssertEqual(request.contentType, "image/png")
+      #expect(request.contentType == "image/png")
       return (
         jsonData(CreatedAttachmentBody(id: 99, uploadUrl: uploadURL.absoluteString)),
         makeHTTPURLResponse(statusCode: 200)
       )
     }
     mock.urlHandler = { method, url, headers, body in
-      XCTAssertEqual(method, "PUT")
-      XCTAssertEqual(url, uploadURL)
-      XCTAssertEqual(headers["Content-Type"], "image/png")
-      XCTAssertEqual(body, Data([0x89, 0x50]))
+      #expect(method == "PUT")
+      #expect(url == uploadURL)
+      #expect(headers["Content-Type"] == "image/png")
+      #expect(body == Data([0x89, 0x50]))
       return (Data(), makeHTTPURLResponse(url: uploadURL, statusCode: 200))
     }
 
@@ -32,32 +34,33 @@ final class AttachmentControllerTests: XCTestCase {
       to: "ci-test"
     )
 
-    XCTAssertEqual(attachment.id, 99)
-    XCTAssertEqual(mock.recordedRequests.count, 2)
+    #expect(attachment.id == 99)
+    #expect(mock.recordedRequests.count == 2)
   }
 
-  func testCreateCreateStepFailure() async throws {
+  @Test func `should throw when the create step fails`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 503))
     }
 
     let attachmentController = AttachmentController(networkController: mock)
-    do {
+    await #expect {
       _ = try await attachmentController.create(
         from: .data(Data(), kind: .jpeg),
         to: "ci-test"
       )
-      XCTFail("Expected error")
-    } catch let error as AttachmentController.UploadError {
-      if case .network(.remoteMaintenance) = error {
-        return
+    } throws: { error in
+      guard let error = error as? AttachmentController.UploadError,
+        case .network(.remoteMaintenance) = error
+      else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 
-  func testCreatePutFailure() async throws {
+  @Test func `should throw when the put step fails`() async {
     let uploadURL = URL(string: "https://uploads.example/put")!
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
@@ -71,38 +74,40 @@ final class AttachmentControllerTests: XCTestCase {
     }
 
     let attachmentController = AttachmentController(networkController: mock)
-    do {
+    await #expect {
       _ = try await attachmentController.create(
         from: .data(Data(), kind: .png),
         to: "ci-test"
       )
-      XCTFail("Expected error")
-    } catch let error as AttachmentController.UploadError {
-      if case .network(.unexpected) = error {
-        return
+    } throws: { error in
+      guard let error = error as? AttachmentController.UploadError,
+        case .network(.unexpected) = error
+      else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 
-  func testCreateConnectionError() async throws {
+  @Test func `should throw on connection error`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       throw URLError(.timedOut)
     }
 
     let attachmentController = AttachmentController(networkController: mock)
-    do {
+    await #expect {
       _ = try await attachmentController.create(
         from: .data(Data(), kind: .png),
         to: "ci-test"
       )
-      XCTFail("Expected error")
-    } catch let error as AttachmentController.UploadError {
-      if case .network(.connection) = error {
-        return
+    } throws: { error in
+      guard let error = error as? AttachmentController.UploadError,
+        case .network(.connection) = error
+      else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 }

@@ -1,27 +1,29 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class PostControllerTests: XCTestCase {
+@Suite
+struct PostControllerTests {
 
-  func testPostSuccess() async throws {
+  @Test func `should post an entry`() async throws {
     let mock = MockNetworkController()
     mock.pathHandler = { method, path, containerId, headers, body in
-      XCTAssertEqual(method, "POST")
-      XCTAssertEqual(path, "/feedback/entries/")
-      XCTAssertEqual(containerId, "ci-test")
-      XCTAssertEqual(headers["Content-Type"], "application/json; charset=utf-8")
+      #expect(method == "POST")
+      #expect(path == "/feedback/entries/")
+      #expect(containerId == "ci-test")
+      #expect(headers["Content-Type"] == "application/json; charset=utf-8")
 
       let posted = decodeJSON(PostedEntryBody.self, from: body!)
-      XCTAssertEqual(posted.questionId, "swift")
-      XCTAssertEqual(posted.content.count, 2)
-      XCTAssertEqual(posted.content[0].type, "score")
-      XCTAssertEqual(posted.content[0].intValue, 75)
-      XCTAssertEqual(posted.content[1].type, "text")
-      XCTAssertEqual(posted.content[1].stringValue, "Hello")
-      XCTAssertEqual(posted.attributes["Platform"], "TestOS")
-      XCTAssertEqual(posted.attributes["Age"], "32")
-      XCTAssertEqual(posted.user.clientId, "test-client-id")
+      #expect(posted.questionId == "swift")
+      #expect(posted.content.count == 2)
+      #expect(posted.content[0].type == "score")
+      #expect(posted.content[0].intValue == 75)
+      #expect(posted.content[1].type == "text")
+      #expect(posted.content[1].stringValue == "Hello")
+      #expect(posted.attributes["Platform"] == "TestOS")
+      #expect(posted.attributes["Age"] == "32")
+      #expect(posted.user.clientId == "test-client-id")
 
       return (jsonData(EntryIDResponse(id: 123)), makeHTTPURLResponse(statusCode: 200))
     }
@@ -42,48 +44,47 @@ final class PostControllerTests: XCTestCase {
       customAttributes: ["Age": "32"]
     )
 
-    XCTAssertEqual(entry.id, 123)
+    #expect(entry.id == 123)
   }
 
-  func testPostEnquiryNotFound() async throws {
+  @Test func `should throw when enquiry is not found`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 404))
     }
 
     let postController = PostController(networkController: mock)
-    do {
+    await #expect {
       _ = try await postController.post(
         to: "ci-test/missing",
         content: [.text(.init(value: "Hello"))]
       )
-      XCTFail("Expected enquiry not found")
-    } catch let error as PostController.PostError {
-      if case .enquiryNotFound = error {
-        return
+    } throws: { error in
+      guard let error = error as? PostController.PostError, case .enquiryNotFound = error else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 
-  func testPostConnectionError() async throws {
+  @Test func `should throw on connection error`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       throw URLError(.notConnectedToInternet)
     }
 
     let postController = PostController(networkController: mock)
-    do {
+    await #expect {
       _ = try await postController.post(
         to: "ci-test/swift",
         content: [.text(.init(value: "Hello"))]
       )
-      XCTFail("Expected connection error")
-    } catch let error as PostController.PostError {
-      if case .network(.connection) = error {
-        return
+    } throws: { error in
+      guard let error = error as? PostController.PostError, case .network(.connection) = error
+      else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 }

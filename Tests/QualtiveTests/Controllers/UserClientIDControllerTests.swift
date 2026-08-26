@@ -1,29 +1,31 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class UserClientIDControllerTests: XCTestCase {
+@Suite
+struct UserClientIDControllerTests {
 
-  func testCreatesAndPersistsClientId() {
-    let suite = "UserClientIDControllerTests.creates.\(UUID().uuidString)"
-    defer { UserDefaults().removePersistentDomain(forName: suite) }
+  @Test func `should create and persist a client id`() {
+    let defaultsSuite = "UserClientIDControllerTests.creates.\(UUID().uuidString)"
+    defer { UserDefaults().removePersistentDomain(forName: defaultsSuite) }
 
-    let controller = UserClientIDController(storageKey: "test-cid", suiteName: suite)
+    let controller = UserClientIDController(storageKey: "test-cid", suiteName: defaultsSuite)
     let first = controller.clientId()
     let second = controller.clientId()
 
-    XCTAssertFalse(first.isEmpty)
-    XCTAssertEqual(first, second)
-    XCTAssertEqual(UserDefaults(suiteName: suite)!.string(forKey: "test-cid"), first)
+    #expect(!first.isEmpty)
+    #expect(first == second)
+    #expect(UserDefaults(suiteName: defaultsSuite)!.string(forKey: "test-cid") == first)
   }
 
-  func testReusesExistingClientId() {
-    let suite = "UserClientIDControllerTests.reuses.\(UUID().uuidString)"
-    defer { UserDefaults().removePersistentDomain(forName: suite) }
+  @Test func `should reuse an existing client id`() {
+    let defaultsSuite = "UserClientIDControllerTests.reuses.\(UUID().uuidString)"
+    defer { UserDefaults().removePersistentDomain(forName: defaultsSuite) }
 
-    UserDefaults(suiteName: suite)!.set("existing-id", forKey: "test-cid")
-    let controller = UserClientIDController(storageKey: "test-cid", suiteName: suite)
+    UserDefaults(suiteName: defaultsSuite)!.set("existing-id", forKey: "test-cid")
+    let controller = UserClientIDController(storageKey: "test-cid", suiteName: defaultsSuite)
 
-    XCTAssertEqual(controller.clientId(), "existing-id")
+    #expect(controller.clientId() == "existing-id")
   }
 }

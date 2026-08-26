@@ -1,10 +1,12 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class EnquiryCodingTests: XCTestCase {
+@Suite
+struct EnquiryCodingTests {
 
-  func testDecodeNoPages() throws {
+  @Test func `should decode with no pages`() throws {
     let result = try JSONDecoder()
       .decode(
         Enquiry.self,
@@ -17,110 +19,101 @@ final class EnquiryCodingTests: XCTestCase {
           ] as TestJSON
         )
       )
-    XCTAssertEqual(result.id, 1)
-    XCTAssertEqual(result.slug, "enquiry-slug")
-    XCTAssertEqual(result.name, "Enquiry Name")
-    XCTAssertEqual(result.pages.count, 0)
+    #expect(result.id == 1)
+    #expect(result.slug == "enquiry-slug")
+    #expect(result.name == "Enquiry Name")
+    #expect(result.pages.count == 0)
   }
 
-  func testDecodeContentTitle() throws {
+  @Test func `should decode title content`() throws {
     let result = try decodeEnquiryWithContent([
       ["type": "title", "text": "Your thoughts?"]
     ])
-    XCTAssertEqual(result.pages[0].content.count, 1)
-    switch result.pages[0].content[0] {
-    case .title(let content):
-      XCTAssertEqual(content.text, "Your thoughts?")
-    default:
-      XCTFail("Expected title")
+    #expect(result.pages[0].content.count == 1)
+    if case .title(let content) = result.pages[0].content[0] {
+      #expect(content.text == "Your thoughts?")
+    } else {
+      Issue.record("Expected title")
     }
   }
 
-  func testDecodeContentScore() throws {
+  @Test func `should decode score content`() throws {
     let result = try decodeEnquiryWithContent([
       ["type": "score", "scoreType": "smilies5"]
     ])
-    switch result.pages[0].content[0] {
-    case .score:
-      break
-    default:
-      XCTFail("Expected score")
+    if case .score = result.pages[0].content[0] {
+    } else {
+      Issue.record("Expected score")
     }
   }
 
-  func testDecodeContentText() throws {
+  @Test func `should decode text content`() throws {
     let result = try decodeEnquiryWithContent([
       ["type": "text", "placeholder": "Write here…"]
     ])
-    switch result.pages[0].content[0] {
-    case .text(let content):
-      XCTAssertEqual(content.placeholder, "Write here…")
-    default:
-      XCTFail("Expected text")
+    if case .text(let content) = result.pages[0].content[0] {
+      #expect(content.placeholder == "Write here…")
+    } else {
+      Issue.record("Expected text")
     }
   }
 
-  func testDecodeContentTextNoPlaceholder() throws {
+  @Test func `should decode text content with no placeholder`() throws {
     let result = try decodeEnquiryWithContent([
       ["type": "text", "placeholder": nil]
     ])
-    switch result.pages[0].content[0] {
-    case .text(let content):
-      XCTAssertNil(content.placeholder)
-    default:
-      XCTFail("Expected text")
+    if case .text(let content) = result.pages[0].content[0] {
+      #expect(content.placeholder == nil)
+    } else {
+      Issue.record("Expected text")
     }
   }
 
-  func testDecodeContentSelect() throws {
+  @Test func `should decode select content`() throws {
     let result = try decodeEnquiryWithContent([
       ["type": "select", "options": ["A", "B", "C"]]
     ])
-    switch result.pages[0].content[0] {
-    case .select(let content):
-      XCTAssertEqual(content.options, ["A", "B", "C"])
-    default:
-      XCTFail("Expected select")
+    if case .select(let content) = result.pages[0].content[0] {
+      #expect(content.options == ["A", "B", "C"])
+    } else {
+      Issue.record("Expected select")
     }
   }
 
-  func testDecodeContentMultiselect() throws {
+  @Test func `should decode multiselect content`() throws {
     let result = try decodeEnquiryWithContent([
       ["type": "multiselect", "options": ["1", "2", "3"]]
     ])
-    switch result.pages[0].content[0] {
-    case .multiselect(let content):
-      XCTAssertEqual(content.options, ["1", "2", "3"])
-    default:
-      XCTFail("Expected multiselect")
+    if case .multiselect(let content) = result.pages[0].content[0] {
+      #expect(content.options == ["1", "2", "3"])
+    } else {
+      Issue.record("Expected multiselect")
     }
   }
 
-  func testDecodeContentAttachments() throws {
+  @Test func `should decode attachments content`() throws {
     let result = try decodeEnquiryWithContent([["type": "attachments"]])
-    switch result.pages[0].content[0] {
-    case .attachments:
-      break
-    default:
-      XCTFail("Expected attachments")
+    if case .attachments = result.pages[0].content[0] {
+    } else {
+      Issue.record("Expected attachments")
     }
   }
 
-  func testDecodeContentFutureSkipped() throws {
+  @Test func `should skip future content types`() throws {
     let result = try decodeEnquiryWithContent([
       ["type": "future-content-type", "key": 123]
     ])
-    XCTAssertEqual(result.pages[0].content.count, 0)
+    #expect(result.pages[0].content.count == 0)
   }
 
-  func testDecodeInvalidRoot() {
-    XCTAssertThrowsError(
+  @Test func `should throw when decoding an invalid root`() {
+    #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(Enquiry.self, from: jsonData([1, 2, 3] as TestJSON))
-    )
+    }
   }
 
-  func testDecodeInvalidId() {
-    XCTAssertThrowsError(
+  @Test func `should throw when decoding an invalid id`() {
+    #expect(throws: DecodingError.self) {
       try JSONDecoder()
         .decode(
           Enquiry.self,
@@ -133,11 +126,11 @@ final class EnquiryCodingTests: XCTestCase {
             ] as TestJSON
           )
         )
-    )
+    }
   }
 
-  func testDecodeInvalidName() {
-    XCTAssertThrowsError(
+  @Test func `should throw when decoding an invalid name`() {
+    #expect(throws: DecodingError.self) {
       try JSONDecoder()
         .decode(
           Enquiry.self,
@@ -150,11 +143,11 @@ final class EnquiryCodingTests: XCTestCase {
             ] as TestJSON
           )
         )
-    )
+    }
   }
 
-  func testDecodeInvalidTitleText() {
-    XCTAssertThrowsError(
+  @Test func `should throw when decoding invalid title text`() {
+    #expect(throws: DecodingError.self) {
       try JSONDecoder()
         .decode(
           Enquiry.self,
@@ -169,10 +162,10 @@ final class EnquiryCodingTests: XCTestCase {
             ] as TestJSON
           )
         )
-    )
+    }
   }
 
-  func testEntryContentTemplateFlattensPages() throws {
+  @Test func `should flatten pages into an entry content template`() throws {
     let enquiry = try JSONDecoder()
       .decode(
         Enquiry.self,
@@ -199,42 +192,39 @@ final class EnquiryCodingTests: XCTestCase {
       )
 
     let template = enquiry.entryContentTemplate()
-    XCTAssertEqual(template.count, 3)
-    switch template[0] {
-    case .title(let content):
-      XCTAssertEqual(content.text, "Page 1")
-    default:
-      XCTFail("Expected title")
+    #expect(template.count == 3)
+    if case .title(let content) = template[0] {
+      #expect(content.text == "Page 1")
+    } else {
+      Issue.record("Expected title")
     }
-    switch template[1] {
-    case .score(let content):
-      XCTAssertNil(content.value)
-    default:
-      XCTFail("Expected score")
+    if case .score(let content) = template[1] {
+      #expect(content.value == nil)
+    } else {
+      Issue.record("Expected score")
     }
-    switch template[2] {
-    case .text(let content):
-      XCTAssertNil(content.value)
-      XCTAssertEqual(content.definition.placeholder, "More")
-    default:
-      XCTFail("Expected text")
+    if case .text(let content) = template[2] {
+      #expect(content.value == nil)
+      #expect(content.definition.placeholder == "More")
+    } else {
+      Issue.record("Expected text")
     }
   }
+}
 
-  private func decodeEnquiryWithContent(_ content: TestJSON) throws -> Enquiry {
-    try JSONDecoder()
-      .decode(
-        Enquiry.self,
-        from: jsonData(
-          [
-            "id": 1,
-            "slug": "enquiry-slug",
-            "name": "Enquiry Name",
-            "pages": [
-              ["content": content]
-            ],
-          ] as TestJSON
-        )
+private func decodeEnquiryWithContent(_ content: TestJSON) throws -> Enquiry {
+  try JSONDecoder()
+    .decode(
+      Enquiry.self,
+      from: jsonData(
+        [
+          "id": 1,
+          "slug": "enquiry-slug",
+          "name": "Enquiry Name",
+          "pages": [
+            ["content": content]
+          ],
+        ] as TestJSON
       )
-  }
+    )
 }

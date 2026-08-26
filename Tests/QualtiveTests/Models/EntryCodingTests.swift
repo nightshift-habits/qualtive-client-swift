@@ -1,27 +1,29 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class EntryCodingTests: XCTestCase {
+@Suite
+struct EntryCodingTests {
 
-  func testDecode() throws {
+  @Test func `should decode`() throws {
     let result = try JSONDecoder()
       .decode(
         Entry.self,
         from: jsonData(["id": 123] as TestJSON)
       )
-    XCTAssertEqual(result.id, 123)
+    #expect(result.id == 123)
   }
 
-  func testDecodeInvalid() {
-    XCTAssertThrowsError(
+  @Test func `should throw when decoding invalid data`() {
+    #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(Entry.self, from: jsonData([1] as TestJSON))
-    )
+    }
   }
 
-  func testDecodeInvalidId() {
-    XCTAssertThrowsError(
+  @Test func `should throw when decoding an invalid id`() {
+    #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(Entry.self, from: jsonData(["id": "a"] as TestJSON))
-    )
+    }
   }
 }

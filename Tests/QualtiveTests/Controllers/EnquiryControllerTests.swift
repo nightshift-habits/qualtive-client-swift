@@ -1,17 +1,19 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import Qualtive
 
-final class EnquiryControllerTests: XCTestCase {
+@Suite
+struct EnquiryControllerTests {
 
-  func testFetchSuccess() async throws {
+  @Test func `should fetch an enquiry`() async throws {
     let mock = MockNetworkController()
     mock.pathHandler = { method, path, containerId, headers, body in
-      XCTAssertEqual(method, "GET")
-      XCTAssertEqual(path, "/feedback/enquiries/swift/")
-      XCTAssertEqual(containerId, "ci-test")
-      XCTAssertEqual(headers["Accept-Language"], "en-US")
-      XCTAssertNil(body)
+      #expect(method == "GET")
+      #expect(path == "/feedback/enquiries/swift/")
+      #expect(containerId == "ci-test")
+      #expect(headers["Accept-Language"] == "en-US")
+      #expect(body == nil)
       return (
         jsonData(
           [
@@ -39,69 +41,64 @@ final class EnquiryControllerTests: XCTestCase {
       locale: Locale(identifier: "en_US")
     )
 
-    XCTAssertEqual(enquiry.id, 6290486614556672)
-    XCTAssertEqual(enquiry.slug, "swift")
-    XCTAssertEqual(enquiry.name, "Swift?")
-    XCTAssertEqual(enquiry.pages.count, 1)
-    XCTAssertEqual(enquiry.pages[0].content.count, 3)
+    #expect(enquiry.id == 6290486614556672)
+    #expect(enquiry.slug == "swift")
+    #expect(enquiry.name == "Swift?")
+    #expect(enquiry.pages.count == 1)
+    #expect(enquiry.pages[0].content.count == 3)
 
-    switch enquiry.pages[0].content[0] {
-    case .score:
-      break
-    default:
-      XCTFail("Expected score")
+    if case .score = enquiry.pages[0].content[0] {
+    } else {
+      Issue.record("Expected score")
     }
-    switch enquiry.pages[0].content[1] {
-    case .title(let content):
-      XCTAssertEqual(content.text, "Thoughts on Swift?")
-    default:
-      XCTFail("Expected title")
+    if case .title(let content) = enquiry.pages[0].content[1] {
+      #expect(content.text == "Thoughts on Swift?")
+    } else {
+      Issue.record("Expected title")
     }
-    switch enquiry.pages[0].content[2] {
-    case .text(let content):
-      XCTAssertEqual(content.placeholder, "Write here…")
-    default:
-      XCTFail("Expected text")
+    if case .text(let content) = enquiry.pages[0].content[2] {
+      #expect(content.placeholder == "Write here…")
+    } else {
+      Issue.record("Expected text")
     }
   }
 
-  func testFetchNotFound() async throws {
+  @Test func `should throw when enquiry is not found`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 404))
     }
 
     let enquiryController = EnquiryController(networkController: mock)
-    do {
+    await #expect {
       _ = try await enquiryController.fetch(collection: "ci-test/missing")
-      XCTFail("Expected not found")
-    } catch let error as EnquiryController.FetchError {
-      if case .notFound = error {
-        return
+    } throws: { error in
+      guard let error = error as? EnquiryController.FetchError, case .notFound = error else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 
-  func testFetchConnectionError() async throws {
+  @Test func `should throw on connection error`() async {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       throw URLError(.notConnectedToInternet)
     }
 
     let enquiryController = EnquiryController(networkController: mock)
-    do {
+    await #expect {
       _ = try await enquiryController.fetch(collection: "ci-test/swift")
-      XCTFail("Expected connection error")
-    } catch let error as EnquiryController.FetchError {
-      if case .network(.connection) = error {
-        return
+    } throws: { error in
+      guard let error = error as? EnquiryController.FetchError, case .network(.connection) = error
+      else {
+        return false
       }
-      XCTFail("Unexpected error: \(error)")
+      return true
     }
   }
 
-  func testFetchSkipsUnknownContentType() async throws {
+  @Test func `should skip unknown content types`() async throws {
     let mock = MockNetworkController()
     mock.pathHandler = { _, _, _, _, _ in
       (
@@ -127,6 +124,6 @@ final class EnquiryControllerTests: XCTestCase {
 
     let enquiryController = EnquiryController(networkController: mock)
     let enquiry = try await enquiryController.fetch(collection: "ci-test/swift")
-    XCTAssertEqual(enquiry.pages[0].content.count, 2)
+    #expect(enquiry.pages[0].content.count == 2)
   }
 }
