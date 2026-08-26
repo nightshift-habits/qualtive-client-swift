@@ -4,10 +4,8 @@ import XCTest
 
 final class EntryPostTests: XCTestCase {
 
-  func testPostSuccess() {
-    let expectation = self.expectation(description: "Post")
-
-    Entry.post(
+  func testPostSuccess() async throws {
+    let entry = try await Entry.post(
       to: ("ci-test", "swift"),
       content: [
         .score(.init(value: 75)),
@@ -17,74 +15,53 @@ final class EntryPostTests: XCTestCase {
       ],
       user: User(id: "ci-swift"),
       customAttributes: ["Age": "23"]
-    ) { result in
-      expectation.fulfill()
+    )
 
-      switch result {
-      case .failure(let error):
+    XCTAssertGreaterThan(entry.id, 0)
+  }
+
+  func testPostNotFound() async throws {
+    do {
+      _ = try await Entry.post(
+        to: ("ci-test", "not-found"),
+        content: [
+          .score(.init(value: 0)),
+          .text(.init(value: "Hello world!")),
+        ]
+      )
+    } catch {
+      switch error as? Entry.PostError {
+      case .questionNotFound:
+        return
+      default:
         XCTFail("\(error)")
-      case .success(let entry):
-        XCTAssertGreaterThan(entry.id, 0)
+        return
       }
     }
 
-    waitForExpectations(timeout: 5)
+    XCTFail("Expected not found error")
   }
 
-  func testPostNotFound() {
-    let expectation = self.expectation(description: "Post")
-
-    Entry.post(
-      to: ("ci-test", "not-found"),
-      content: [
-        .score(.init(value: 0)),
-        .text(.init(value: "Hello world!")),
-      ]
-    ) { result in
-      expectation.fulfill()
-
-      switch result {
-      case .failure(let error):
-        switch error {
-        case .questionNotFound:
-          break
-        default:
-          XCTFail("\(error)")
-        }
-      case .success(let question):
-        XCTFail("Expected not found error: \(question)")
+  func testPostConnectionError() async throws {
+    do {
+      _ = try await Entry.post(
+        to: ("ci-test", "not-found"),
+        content: [
+          .score(.init(value: 0)),
+          .text(.init(value: "Hello world!")),
+        ],
+        options: .init(_remoteURLString: "https://does-not-exists-qualtive.io/")
+      )
+    } catch {
+      switch error as? Entry.PostError {
+      case .general(.connection):
+        return
+      default:
+        XCTFail("\(error)")
+        return
       }
     }
 
-    waitForExpectations(timeout: 5)
-  }
-
-  func testPostConnectionError() {
-    let expectation = self.expectation(description: "Post")
-
-    Entry.post(
-      to: ("ci-test", "not-found"),
-      content: [
-        .score(.init(value: 0)),
-        .text(.init(value: "Hello world!")),
-      ],
-      options: .init(_remoteURLString: "https://does-not-exists-qualtive.io/")
-    ) { result in
-      expectation.fulfill()
-
-      switch result {
-      case .failure(let error):
-        switch error {
-        case .general(.connection):
-          break
-        default:
-          XCTFail("\(error)")
-        }
-      case .success(let question):
-        XCTFail("Expected not general connection error: \(question)")
-      }
-    }
-
-    waitForExpectations(timeout: 5)
+    XCTFail("Expected connection error")
   }
 }

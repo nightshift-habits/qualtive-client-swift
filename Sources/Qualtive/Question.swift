@@ -67,35 +67,19 @@ public struct Question: Sendable {
   public static func fetch(
     collection: Collection,
     locale: Locale = .current
-  ) async throws
-    -> Question
-  {
-    try await withCheckedThrowingContinuation { continuation in
-      fetch(collection: collection, options: .init(_remoteURLString: nil)) {
-        continuation.resume(with: $0)
-      }
-    }
-  }
-
-  /// Fetch a question and it's definition from qualtive.io.
-  /// - Parameters:
-  ///   - collection: The collection identifier for the question.
-  ///   - locale: The locale to use for question. If the question is translated on Qualtive this specified which translation to use for localizable fields. Defaults to device locale.
-  ///   - completion: Closure that is called with the result of the operation. Called on the main thread.
-  public static func fetch(
-    collection: Collection,
-    locale: Locale = .current,
-    completion: (@Sendable (Result<Question, FetchError>) -> Void)? = nil
-  ) {
-    fetch(collection: collection, options: .init(_remoteURLString: nil), completion: completion)
+  ) async throws -> Question {
+    try await fetch(
+      collection: collection,
+      options: .init(_remoteURLString: nil),
+      locale: locale
+    )
   }
 
   static func fetch(
     collection: Collection,
     options: PrivateOptions,
-    locale: Locale = .current,
-    completion: (@Sendable (Result<Question, FetchError>) -> Void)? = nil
-  ) {
+    locale: Locale = .current
+  ) async throws -> Question {
     var urlComponents = URLComponents(
       string: options._remoteURLString ?? Configuration.remoteURLString
     )!
@@ -113,47 +97,42 @@ public struct Question: Sendable {
       forHTTPHeaderField: "Accept-Language"
     )
 
-    let task = URLSession.qualtive.dataTask(with: urlRequest) { (data, response, connectionError) in
-      if let response = response as? HTTPURLResponse, let data = data {
-        switch response.statusCode {
-        case 200..<300:
-          do {
-            let json = try JSONSerialization.jsonObject(with: data)
-            let result = try Question(json: json)
-            DispatchQueue.main.async {
-              completion?(.success(result))
-            }
-          } catch {
-            DispatchQueue.main.async {
-              completion?(.failure(.general(.unexpected(error))))
-            }
-          }
-        case 404:
-          DispatchQueue.main.async {
-            completion?(.failure(.notFound))
-          }
-        case 503:
-          DispatchQueue.main.async {
-            completion?(.failure(.general(.unexpected(UnexpectedError.remoteMaintenance))))
-          }
-        default:
-          DispatchQueue.main.async {
-            completion?(
-              .failure(.general(.unexpected(UnexpectedError.httpStatusCode(response.statusCode))))
-            )
-          }
-        }
-
-      } else if let error = connectionError {
-        DispatchQueue.main.async {
-          completion?(.failure(.general(.connection(error))))
-        }
-      } else {
-        DispatchQueue.main.async {
-          completion?(.failure(.general(.cancelled)))
-        }
-      }
+    let data: Data
+    let response: URLResponse
+    do {
+      (data, response) = try await URLSession.qualtive.data(for: urlRequest)
+    } catch {
+      throw mapFetchNetworkError(error)
     }
-    task.resume()
+
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw FetchError.general(.unexpected(ParseError(debugMessage: "Response is not HTTP")))
+    }
+
+    switch httpResponse.statusCode {
+    case 200..<300:
+      do {
+        let json = try JSONSerialization.jsonObject(with: data)
+        return try Question(json: json)
+      } catch {
+        throw FetchError.general(.unexpected(error))
+      }
+    case 404:
+      throw FetchError.notFound
+    case 503:
+      throw FetchError.general(.unexpected(UnexpectedError.remoteMaintenance))
+    default:
+      throw FetchError.general(.unexpected(UnexpectedError.httpStatusCode(httpResponse.statusCode)))
+    }
   }
+}
+
+private func mapFetchNetworkError(_ error: Error) -> Question.FetchError {
+  if error is CancellationError {
+    return .general(.cancelled)
+  }
+  if let urlError = error as? URLError, urlError.code == .cancelled {
+    return .general(.cancelled)
+  }
+  return .general(.connection(error))
 }
