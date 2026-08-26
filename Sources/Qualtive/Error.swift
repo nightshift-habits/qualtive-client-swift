@@ -1,11 +1,11 @@
 import Foundation
 
-struct ParseError: Error {
+struct ParseError: Error, Sendable {
 
   let debugMessage: String
 }
 
-enum UnexpectedError: Error {
+enum UnexpectedError: Error, Sendable {
   case remoteMaintenance
   case httpStatusCode(Int)
 }

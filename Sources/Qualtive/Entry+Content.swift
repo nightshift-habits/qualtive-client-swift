@@ -10,7 +10,7 @@ extension Entry {
   /// - `text`: Free-form text input. User can type whatever text he/she wants.
   /// - `select`: Single select/radio button input. User can select one of many possible pre-defined options.
   /// - `multiselect`: Multi-select/checkbox buttons input. User can select on or many of possible pre-defined options.
-  public enum Content {
+  public enum Content: Sendable {
 
     /// Static title that was displayed to the user. Is not user interactable.
     case title(TitleContent)
@@ -32,7 +32,7 @@ extension Entry {
   }
 
   /// Static title that was displayed to the user. Not user interactable.
-  public struct TitleContent {
+  public struct TitleContent: Sendable {
 
     /// Source definition of the content from the question.
     public let definition: Question.TitleContent
@@ -56,7 +56,7 @@ extension Entry {
   }
 
   /// Score/rating input for a single value between 0 and 100.
-  public struct ScoreContent {
+  public struct ScoreContent: Sendable {
 
     /// Source definition of the content from the question.
     public let definition: Question.ScoreContent
@@ -83,7 +83,7 @@ extension Entry {
   }
 
   /// Free-form text input. User can type whatever text he/she wants.
-  public struct TextContent {
+  public struct TextContent: Sendable {
 
     /// Source definition of the content from the question.
     public let definition: Question.TextContent
@@ -107,7 +107,7 @@ extension Entry {
   }
 
   /// Single select/radio button input. User can select one of many possible pre-defined options.
-  public struct SelectContent {
+  public struct SelectContent: Sendable {
 
     /// Source definition of the content from the question.
     public let definition: Question.SelectContent
@@ -131,7 +131,7 @@ extension Entry {
   }
 
   /// Multi-select/checkbox buttons input. User can select on or many of possible pre-defined options.
-  public struct MultiselectContent {
+  public struct MultiselectContent: Sendable {
 
     /// Source definition of the content from the question.
     public let definition: Question.MultiselectContent
@@ -155,7 +155,7 @@ extension Entry {
   }
 
   /// Attachments/files input.
-  public struct AttachmentsContent {
+  public struct AttachmentsContent: Sendable {
 
     /// Source definition of the content from the question.
     public let definition: Question.AttachmentsContent
