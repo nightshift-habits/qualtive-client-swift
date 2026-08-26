@@ -1,6 +1,6 @@
 import Foundation
 
-struct PrivateOptions {
+struct PrivateOptions: Sendable {
 
   let _remoteURLString: String?
 }
