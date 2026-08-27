@@ -31,19 +31,13 @@ public struct AttachmentController: AttachmentControllerType {
     from upload: Attachment.Upload,
     to containerId: ContainerId
   ) async throws -> Attachment {
-    let contentType: String
-    switch upload {
-    case .data(_, let kind):
-      contentType = kind.mimeType
-    }
-
     let created: CreatedAttachment
     do {
       created = try await networkController.send(
         method: "POST",
         path: "/feedback/attachments/",
         containerId: containerId.rawValue,
-        body: CreateAttachmentRequest(contentType: contentType)
+        body: CreateAttachmentRequest(contentType: contentType(of: upload).mimeType)
       )
     } catch let error as NetworkError {
       throw UploadError.network(error)
@@ -52,29 +46,48 @@ public struct AttachmentController: AttachmentControllerType {
     try await uploadBytes(upload, to: created.uploadURL)
     return Attachment(id: created.id)
   }
+}
+
+private func contentType(of upload: Attachment.Upload) -> Attachment.ContentType {
+  switch upload {
+  case .data(_, let contentType), .file(_, let contentType):
+    return contentType
+  }
+}
+
+extension AttachmentController {
 
   private func uploadBytes(
     _ upload: Attachment.Upload,
     to uploadURL: URL
   ) async throws {
-    let headers: [String: String]
-    let body: Data
-    switch upload {
-    case .data(let data, let kind):
-      headers = ["Content-Type": kind.mimeType]
-      body = data
-    }
-
     let response: HTTPURLResponse
     do {
-      (_, response) = try await networkController.send(
-        method: "PUT",
-        url: uploadURL,
-        headers: headers,
-        body: body
-      )
+      switch upload {
+      case .data(let data, let contentType):
+        (_, response) = try await networkController.send(
+          method: "PUT",
+          url: uploadURL,
+          headers: ["Content-Type": contentType.mimeType],
+          body: data
+        )
+      case .file(let fileURL, let contentType):
+        guard fileURL.isFileURL else {
+          throw UploadError.network(
+            .unexpected(ParseError(debugMessage: "Attachment file URL must be a file URL"))
+          )
+        }
+        (_, response) = try await networkController.send(
+          method: "PUT",
+          url: uploadURL,
+          headers: ["Content-Type": contentType.mimeType],
+          fileURL: fileURL
+        )
+      }
     } catch let error as NetworkError {
       throw UploadError.network(error)
+    } catch let error as UploadError {
+      throw error
     }
 
     switch response.statusCode {

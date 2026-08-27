@@ -5,24 +5,24 @@ import Foundation
 #endif
 
 /// Produces the standard device/app attributes collected when posting feedback.
-public protocol StandardAttributesControllerType: Sendable {
+protocol StandardAttributesControllerType: Sendable {
 
   func makeAttributes(locale: Locale) async -> Attributes
 }
 
 extension StandardAttributesControllerType {
 
-  public func makeAttributes() async -> Attributes {
+  func makeAttributes() async -> Attributes {
     await makeAttributes(locale: .current)
   }
 }
 
 /// Collects platform, device, app, and locale attributes.
-public struct StandardAttributesController: StandardAttributesControllerType {
+struct StandardAttributesController: StandardAttributesControllerType {
 
-  public init() {}
+  init() {}
 
-  public func makeAttributes(locale: Locale) async -> Attributes {
+  func makeAttributes(locale: Locale) async -> Attributes {
     var attributes = Attributes()
 
     if let value = platform() { attributes[.platform] = value }

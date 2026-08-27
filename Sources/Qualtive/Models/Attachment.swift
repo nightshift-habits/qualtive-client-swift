@@ -9,19 +9,36 @@ public struct Attachment: Sendable, Codable {
     self.id = id
   }
 
-  public enum Upload: Sendable {
-    case data(Data, kind: Kind)
+  /// MIME type for an uploaded attachment.
+  ///
+  /// Any MIME string is accepted (for example `application/pdf`, `video/mp4`, `image/jpeg`).
+  public struct ContentType: Sendable, Hashable, ExpressibleByStringLiteral, CustomStringConvertible
+  {
 
-    public enum Kind: Sendable {
-      case png
-      case jpeg
+    public let mimeType: String
 
-      var mimeType: String {
-        switch self {
-        case .jpeg: return "image/jpeg"
-        case .png: return "image/png"
-        }
-      }
+    public init(_ mimeType: String) {
+      self.mimeType = mimeType
     }
+
+    public init(stringLiteral value: String) {
+      self.init(value)
+    }
+
+    public var description: String { mimeType }
+
+    /// Convenience for `image/png`.
+    public static let png = ContentType("image/png")
+
+    /// Convenience for `image/jpeg`.
+    public static let jpeg = ContentType("image/jpeg")
+  }
+
+  public enum Upload: Sendable {
+    /// Bytes already in memory. Prefer `file` for large payloads such as video.
+    case data(Data, contentType: ContentType)
+
+    /// Local file URL. Streamed from disk; the full file is not buffered in memory.
+    case file(URL, contentType: ContentType)
   }
 }

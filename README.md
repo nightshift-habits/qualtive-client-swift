@@ -77,11 +77,8 @@ The public API is split into focused controllers you can also inject via protoco
 - `EnquiryController` / `EnquiryControllerType` — fetch enquiry definitions
 - `PostController` / `PostControllerType` — post entries
 - `AttachmentController` / `AttachmentControllerType` — upload attachments
-- `StandardAttributesController` / `StandardAttributesControllerType` — device/app attributes collected on post
-- `UserClientIDController` / `UserClientIDControllerType` — persisted per-device client id
-- `LoggingController` / `LoggingControllerType` — diagnostic logging
 
-Default inits wire production networking and related controllers. For custom UI later, pass these into your views.
+Default inits wire production networking. For custom UI later, pass these into your views.
 
 ### User data
 
@@ -119,6 +116,42 @@ try await PostController().post(
 ```
 
 `Attributes` is dictionary-backed and expressible by dictionary literal, with typed keys such as `.platform`, `.os`, and `.appId`.
+
+Privacy options apply to that post only. By default, non-personal device/app attributes are attached and a per-device client id is stored. You can turn either off:
+
+```swift
+try await PostController().post(
+  to: "my-company/my-enquiry",
+  content: [
+    .text(.init(value: "Hello")),
+  ],
+  options: PostOptions(
+    metadataCollection: .none,
+    userTrackingConsent: .denied
+  )
+)
+```
+
+Attachments (for example from the photo picker or a file URL) upload first, then reference the returned id:
+
+```swift
+let image = try await AttachmentController().create(
+  from: .data(pngData, contentType: .png),
+  to: "my-company"
+)
+let video = try await AttachmentController().create(
+  from: .file(fileURL, contentType: "video/mp4"),
+  to: "my-company"
+)
+try await PostController().post(
+  to: "my-company/my-enquiry",
+  content: [
+    .attachments(.init(values: [image, video])),
+  ]
+)
+```
+
+Any MIME type is accepted. Prefer `.file` for large payloads so the bytes are streamed from disk.
 
 ## Supported platforms
 

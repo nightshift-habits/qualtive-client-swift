@@ -10,7 +10,18 @@ struct AttachmentUploadIntegrationTests {
     let png = try onePixelPNG()
     let attachment = try await AttachmentController()
       .create(
-        from: .data(png, kind: .png),
+        from: .data(png, contentType: .png),
+        to: "ci-test"
+      )
+
+    #expect(attachment.id > 0)
+  }
+
+  @Test func `should upload a png from a file url`() async throws {
+    let fileURL = try #require(Bundle.module.url(forResource: "1px", withExtension: "png"))
+    let attachment = try await AttachmentController()
+      .create(
+        from: .file(fileURL, contentType: .png),
         to: "ci-test"
       )
 
@@ -21,7 +32,7 @@ struct AttachmentUploadIntegrationTests {
     let png = try onePixelPNG()
     let attachment = try await AttachmentController()
       .create(
-        from: .data(png, kind: .png),
+        from: .data(png, contentType: .png),
         to: "ci-test"
       )
 
@@ -45,7 +56,7 @@ struct AttachmentUploadIntegrationTests {
     )
     await #expect {
       _ = try await attachmentController.create(
-        from: .data(Data(), kind: .png),
+        from: .data(Data(), contentType: .png),
         to: "ci-test"
       )
     } throws: { error in

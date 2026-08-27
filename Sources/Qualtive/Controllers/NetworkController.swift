@@ -38,6 +38,39 @@ package protocol NetworkControllerType: Sendable {
     headers: [String: String],
     body: Data?
   ) async throws -> (Data, HTTPURLResponse)
+
+  /// Performs an HTTP request against an absolute URL, streaming the body from a local file.
+  ///
+  /// Throws `NetworkError`, or `CancellationError` when the task/request is cancelled.
+  func send(
+    method: String,
+    url: URL,
+    headers: [String: String],
+    fileURL: URL
+  ) async throws -> (Data, HTTPURLResponse)
+}
+
+extension NetworkControllerType {
+
+  package func send(
+    method: String,
+    url: URL,
+    headers: [String: String],
+    fileURL: URL
+  ) async throws -> (Data, HTTPURLResponse) {
+    let body: Data
+    do {
+      body = try Data(contentsOf: fileURL)
+    } catch {
+      throw NetworkError.connection(error)
+    }
+    return try await send(
+      method: method,
+      url: url,
+      headers: headers,
+      body: body
+    )
+  }
 }
 
 extension NetworkControllerType {
@@ -181,6 +214,29 @@ package struct NetworkController: NetworkControllerType {
     headers: [String: String],
     body: Data?
   ) async throws -> (Data, HTTPURLResponse) {
+    var urlRequest = makeURLRequest(method: method, url: url, headers: headers)
+    urlRequest.httpBody = body
+    return try await execute(urlRequest)
+  }
+
+  package func send(
+    method: String,
+    url: URL,
+    headers: [String: String],
+    fileURL: URL
+  ) async throws -> (Data, HTTPURLResponse) {
+    let urlRequest = makeURLRequest(method: method, url: url, headers: headers)
+    return try await execute(urlRequest, fromFile: fileURL)
+  }
+}
+
+extension NetworkController {
+
+  private func makeURLRequest(
+    method: String,
+    url: URL,
+    headers: [String: String]
+  ) -> URLRequest {
     var urlRequest = URLRequest(
       url: url,
       cachePolicy: .useProtocolCachePolicy,
@@ -190,8 +246,10 @@ package struct NetworkController: NetworkControllerType {
     for (key, value) in headers {
       urlRequest.addValue(value, forHTTPHeaderField: key)
     }
-    urlRequest.httpBody = body
+    return urlRequest
+  }
 
+  private func execute(_ urlRequest: URLRequest) async throws -> (Data, HTTPURLResponse) {
     let data: Data
     let response: URLResponse
     do {
@@ -199,14 +257,31 @@ package struct NetworkController: NetworkControllerType {
     } catch {
       try mapNetworkTransportError(error)
     }
-
-    guard let httpResponse = response as? HTTPURLResponse else {
-      throw NetworkError.unexpected(
-        ParseError(debugMessage: "Response is not HTTP")
-      )
-    }
-    return (data, httpResponse)
+    return try httpResponse(data, response)
   }
+
+  private func execute(
+    _ urlRequest: URLRequest,
+    fromFile fileURL: URL
+  ) async throws -> (Data, HTTPURLResponse) {
+    let data: Data
+    let response: URLResponse
+    do {
+      (data, response) = try await urlSession.upload(for: urlRequest, fromFile: fileURL)
+    } catch {
+      try mapNetworkTransportError(error)
+    }
+    return try httpResponse(data, response)
+  }
+}
+
+private func httpResponse(_ data: Data, _ response: URLResponse) throws -> (Data, HTTPURLResponse) {
+  guard let httpResponse = response as? HTTPURLResponse else {
+    throw NetworkError.unexpected(
+      ParseError(debugMessage: "Response is not HTTP")
+    )
+  }
+  return (data, httpResponse)
 }
 
 private func mapNetworkTransportError(_ error: Error) throws -> Never {
