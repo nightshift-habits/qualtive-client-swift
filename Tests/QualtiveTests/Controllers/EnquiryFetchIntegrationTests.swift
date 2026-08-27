@@ -12,6 +12,9 @@ struct EnquiryFetchIntegrationTests {
     #expect(enquiry.slug == "swift")
     #expect(enquiry.id > 0)
     #expect(!enquiry.pages.isEmpty)
+    #expect(!enquiry.submittedPages.isEmpty)
+    #expect(enquiry.container.id == "ci-test")
+    #expect(enquiry.theme.cornerStyle == .rounded || enquiry.theme.cornerStyle == .square)
   }
 
   @Test func `should throw when enquiry is not found`() async {

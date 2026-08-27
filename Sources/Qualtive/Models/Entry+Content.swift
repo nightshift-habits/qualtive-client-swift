@@ -60,6 +60,8 @@ extension Entry {
           try container.encode("nps", forKey: .scoreType)
           try container.encode(leadingText, forKey: .leadingText)
           try container.encode(trailingText, forKey: .trailingText)
+        case .stars5:
+          try container.encode("stars5", forKey: .scoreType)
         }
       case .text(let content):
         try container.encode("text", forKey: .type)

@@ -148,12 +148,7 @@ struct NetworkControllerTests {
         headerFields: nil
       )!
       let data = jsonData(
-        [
-          "id": 1,
-          "slug": "swift",
-          "name": "Swift?",
-          "pages": [],
-        ] as TestJSON
+        enquiryJSON(slug: "swift", name: "Swift?", pages: [])
       )
       return (data, response)
     }
