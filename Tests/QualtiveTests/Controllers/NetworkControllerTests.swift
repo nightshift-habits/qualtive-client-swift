@@ -192,43 +192,48 @@ struct NetworkControllerTests {
     #expect(result.id == 1)
   }
 
-  @Test func `should stream a file body on upload`() async throws {
-    let configuration = URLSessionConfiguration.ephemeral
-    configuration.protocolClasses = [RecordingURLProtocol.self]
-    let session = URLSession(configuration: configuration)
-    let networkController = NetworkController(
-      urlSession: session,
-      baseURL: URL(string: "https://example.test/")!
-    )
+  // watchOS URLSession upload tasks do not consult `URLProtocol`, so this
+  // interceptor-based test cannot run there. File uploads are still covered by
+  // `AttachmentControllerTests`.
+  #if !os(watchOS)
+    @Test func `should stream a file body on upload`() async throws {
+      let configuration = URLSessionConfiguration.ephemeral
+      configuration.protocolClasses = [RecordingURLProtocol.self]
+      let session = URLSession(configuration: configuration)
+      let networkController = NetworkController(
+        urlSession: session,
+        baseURL: URL(string: "https://example.test/")!
+      )
 
-    let bytes = Data([0x01, 0x02, 0x03])
-    let fileURL = FileManager.default.temporaryDirectory
-      .appendingPathComponent("qualtive-network-\(UUID().uuidString).bin")
-    try bytes.write(to: fileURL)
-    defer { try? FileManager.default.removeItem(at: fileURL) }
+      let bytes = Data([0x01, 0x02, 0x03])
+      let fileURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent("qualtive-network-\(UUID().uuidString).bin")
+      try bytes.write(to: fileURL)
+      defer { try? FileManager.default.removeItem(at: fileURL) }
 
-    RecordingURLProtocol.handler = { request in
-      #expect(request.url?.absoluteString == "https://uploads.example/put")
-      #expect(request.httpMethod == "PUT")
-      #expect(request.value(forHTTPHeaderField: "Content-Type") == "video/mp4")
-      let response = HTTPURLResponse(
-        url: request.url!,
-        statusCode: 200,
-        httpVersion: nil,
-        headerFields: nil
-      )!
-      return (Data(), response)
+      RecordingURLProtocol.handler = { request in
+        #expect(request.url?.absoluteString == "https://uploads.example/put")
+        #expect(request.httpMethod == "PUT")
+        #expect(request.value(forHTTPHeaderField: "Content-Type") == "video/mp4")
+        let response = HTTPURLResponse(
+          url: request.url!,
+          statusCode: 200,
+          httpVersion: nil,
+          headerFields: nil
+        )!
+        return (Data(), response)
+      }
+      defer { RecordingURLProtocol.handler = nil }
+
+      let (_, response) = try await networkController.send(
+        method: "PUT",
+        url: URL(string: "https://uploads.example/put")!,
+        headers: ["Content-Type": "video/mp4"],
+        fileURL: fileURL
+      )
+      #expect(response.statusCode == 200)
     }
-    defer { RecordingURLProtocol.handler = nil }
-
-    let (_, response) = try await networkController.send(
-      method: "PUT",
-      url: URL(string: "https://uploads.example/put")!,
-      headers: ["Content-Type": "video/mp4"],
-      fileURL: fileURL
-    )
-    #expect(response.statusCode == 200)
-  }
+  #endif
 }
 
 private final class RecordingURLProtocol: URLProtocol, @unchecked Sendable {
