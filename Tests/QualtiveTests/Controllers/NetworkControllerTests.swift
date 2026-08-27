@@ -191,6 +191,44 @@ struct NetworkControllerTests {
     )
     #expect(result.id == 1)
   }
+
+  @Test func `should stream a file body on upload`() async throws {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [RecordingURLProtocol.self]
+    let session = URLSession(configuration: configuration)
+    let networkController = NetworkController(
+      urlSession: session,
+      baseURL: URL(string: "https://example.test/")!
+    )
+
+    let bytes = Data([0x01, 0x02, 0x03])
+    let fileURL = FileManager.default.temporaryDirectory
+      .appendingPathComponent("qualtive-network-\(UUID().uuidString).bin")
+    try bytes.write(to: fileURL)
+    defer { try? FileManager.default.removeItem(at: fileURL) }
+
+    RecordingURLProtocol.handler = { request in
+      #expect(request.url?.absoluteString == "https://uploads.example/put")
+      #expect(request.httpMethod == "PUT")
+      #expect(request.value(forHTTPHeaderField: "Content-Type") == "video/mp4")
+      let response = HTTPURLResponse(
+        url: request.url!,
+        statusCode: 200,
+        httpVersion: nil,
+        headerFields: nil
+      )!
+      return (Data(), response)
+    }
+    defer { RecordingURLProtocol.handler = nil }
+
+    let (_, response) = try await networkController.send(
+      method: "PUT",
+      url: URL(string: "https://uploads.example/put")!,
+      headers: ["Content-Type": "video/mp4"],
+      fileURL: fileURL
+    )
+    #expect(response.statusCode == 200)
+  }
 }
 
 private final class RecordingURLProtocol: URLProtocol, @unchecked Sendable {
@@ -198,6 +236,10 @@ private final class RecordingURLProtocol: URLProtocol, @unchecked Sendable {
   nonisolated(unsafe) static var handler: ((URLRequest) throws -> (Data, HTTPURLResponse))?
 
   override class func canInit(with request: URLRequest) -> Bool {
+    true
+  }
+
+  override class func canInit(with task: URLSessionTask) -> Bool {
     true
   }
 

@@ -4,13 +4,17 @@ import Foundation
 public protocol PostControllerType: Sendable {
 
   /// Posts an entry to qualtive.io.
+  ///
+  /// Text sections whose enquiry definition uses `storageTarget` `.attribute` are sent as
+  /// attributes, not as text content.
   /// - Throws: `PostError`, or `CancellationError` when cancelled.
   func post(
     to collection: Collection,
     content: [Entry.Content],
     user: User,
     customAttributes: Attributes,
-    locale: Locale
+    locale: Locale,
+    options: PostOptions
   ) async throws -> Entry
 }
 
@@ -25,7 +29,8 @@ extension PostControllerType {
       content: content,
       user: User(),
       customAttributes: [:],
-      locale: .current
+      locale: .current,
+      options: PostOptions()
     )
   }
 
@@ -39,7 +44,8 @@ extension PostControllerType {
       content: content,
       user: user,
       customAttributes: [:],
-      locale: .current
+      locale: .current,
+      options: PostOptions()
     )
   }
 
@@ -53,7 +59,8 @@ extension PostControllerType {
       content: content,
       user: User(),
       customAttributes: customAttributes,
-      locale: .current
+      locale: .current,
+      options: PostOptions()
     )
   }
 
@@ -68,7 +75,73 @@ extension PostControllerType {
       content: content,
       user: user,
       customAttributes: customAttributes,
-      locale: .current
+      locale: .current,
+      options: PostOptions()
+    )
+  }
+
+  public func post(
+    to collection: Collection,
+    content: [Entry.Content],
+    user: User,
+    customAttributes: Attributes,
+    locale: Locale
+  ) async throws -> Entry {
+    try await post(
+      to: collection,
+      content: content,
+      user: user,
+      customAttributes: customAttributes,
+      locale: locale,
+      options: PostOptions()
+    )
+  }
+
+  public func post(
+    to collection: Collection,
+    content: [Entry.Content],
+    options: PostOptions
+  ) async throws -> Entry {
+    try await post(
+      to: collection,
+      content: content,
+      user: User(),
+      customAttributes: [:],
+      locale: .current,
+      options: options
+    )
+  }
+
+  public func post(
+    to collection: Collection,
+    content: [Entry.Content],
+    customAttributes: Attributes,
+    options: PostOptions
+  ) async throws -> Entry {
+    try await post(
+      to: collection,
+      content: content,
+      user: User(),
+      customAttributes: customAttributes,
+      locale: .current,
+      options: options
+    )
+  }
+
+  public func post(
+    to collection: Collection,
+    content: [Entry.Content],
+    user: User,
+    customAttributes: Attributes,
+    options: PostOptions
+  ) async throws -> Entry {
+    try await post(
+      to: collection,
+      content: content,
+      user: user,
+      customAttributes: customAttributes,
+      locale: .current,
+      options: options
     )
   }
 }
@@ -101,7 +174,7 @@ public struct PostController: PostControllerType {
     )
   }
 
-  package init(
+  init(
     networkController: some NetworkControllerType,
     standardAttributesController: some StandardAttributesControllerType,
     userClientIDController: some UserClientIDControllerType
@@ -116,16 +189,28 @@ public struct PostController: PostControllerType {
     content: [Entry.Content],
     user: User,
     customAttributes: Attributes,
-    locale: Locale
+    locale: Locale,
+    options: PostOptions
   ) async throws -> Entry {
-    var attributes = await standardAttributesController.makeAttributes(locale: locale)
+    var attributes = Attributes()
+    if options.metadataCollection == .nonPersonal {
+      attributes = await standardAttributesController.makeAttributes(locale: locale)
+    }
     attributes.merge(customAttributes)
+    attributes.merge(attributesFromContent(content))
+
+    let clientId: String?
+    if options.userTrackingConsent == .granted {
+      clientId = userClientIDController.clientId()
+    } else {
+      clientId = nil
+    }
 
     let request = PostEntryRequest(
       questionId: collection.enquiryId.rawValue,
-      content: content,
+      content: contentForPost(content),
       user: .init(
-        clientId: userClientIDController.clientId(),
+        clientId: clientId,
         timeZoneIdentifier: TimeZone.current.identifier,
         id: user.id,
         name: user.name,
@@ -157,6 +242,30 @@ private func mapPostError(_ error: NetworkError) -> PostController.PostError {
   }
 }
 
+private func contentForPost(_ content: [Entry.Content]) -> [Entry.Content] {
+  content.filter { section in
+    if case .text(let text) = section,
+      case .attribute = text.definition.storageTarget
+    {
+      return false
+    }
+    return true
+  }
+}
+
+private func attributesFromContent(_ content: [Entry.Content]) -> Attributes {
+  var result = Attributes()
+  for section in content {
+    guard case .text(let text) = section,
+      case .attribute(let name) = text.definition.storageTarget
+    else { continue }
+    guard let value = text.value, !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    else { continue }
+    result[name] = value
+  }
+  return result
+}
+
 private struct PostEntryRequest: Encodable {
 
   let questionId: String
@@ -166,11 +275,28 @@ private struct PostEntryRequest: Encodable {
   let attributeHints: AttributeHints
 
   struct UserPayload: Encodable {
-    let clientId: String
+    let clientId: String?
     let timeZoneIdentifier: String
     let id: String?
     let name: String?
     let email: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case clientId
+      case timeZoneIdentifier
+      case id
+      case name
+      case email
+    }
+
+    func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      try container.encodeIfPresent(clientId, forKey: .clientId)
+      try container.encode(timeZoneIdentifier, forKey: .timeZoneIdentifier)
+      try container.encodeIfPresent(id, forKey: .id)
+      try container.encodeIfPresent(name, forKey: .name)
+      try container.encodeIfPresent(email, forKey: .email)
+    }
   }
 
   struct AttributeHints: Encodable {

@@ -9,6 +9,12 @@ All notable changes to this project will be documented in this file.
 - Full enquiry fetch model: `theme`, `container`, `submittedPages` (with score conditions), and `isUserContactDetailsRequired`.
 - Page content types `body`, `image`, and `contactDetails`; select `allowsCustomInput`; text `storageTarget`; and score `stars5`.
 - Optional `previewToken` on `EnquiryController.fetch` for unpublished drafts.
+- Per-post `PostOptions` for `metadataCollection` and `userTrackingConsent`.
+- Attachment uploads from a local file URL, and arbitrary MIME types (not only PNG/JPEG).
+
+### Fixed
+
+- Text fields with `storageTarget` `.attribute` are posted as attributes, not as text content.
 
 ### Changed
 
