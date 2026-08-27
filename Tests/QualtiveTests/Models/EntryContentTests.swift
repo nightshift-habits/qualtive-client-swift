@@ -55,6 +55,15 @@ struct EntryContentTests {
     #expect(encoded.scoreType == "thumbs")
   }
 
+  @Test func `should encode stars5 score type`() throws {
+    let encoded = try encode(
+      .score(.init(enquiryContent: .init(kind: .stars5)))
+    )
+    #expect(encoded.scoreType == "stars5")
+    #expect(encoded.leadingText == nil)
+    #expect(encoded.trailingText == nil)
+  }
+
   @Test func `should encode attachment values`() throws {
     let encoded = try encode(.attachments(.init(values: [Attachment(id: 7)])))
     #expect(encoded.type == "attachments")

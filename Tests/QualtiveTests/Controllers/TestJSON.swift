@@ -5,6 +5,7 @@ enum TestJSON: Encodable, Equatable {
   case string(String)
   case int(Int)
   case int64(Int64)
+  case bool(Bool)
   case null
   case array([TestJSON])
   case object([String: TestJSON])
@@ -17,6 +18,8 @@ enum TestJSON: Encodable, Equatable {
     case .int(let value):
       try container.encode(value)
     case .int64(let value):
+      try container.encode(value)
+    case .bool(let value):
       try container.encode(value)
     case .null:
       try container.encodeNil()
@@ -37,6 +40,12 @@ extension TestJSON: ExpressibleByStringLiteral {
 extension TestJSON: ExpressibleByIntegerLiteral {
   init(integerLiteral value: Int) {
     self = .int(value)
+  }
+}
+
+extension TestJSON: ExpressibleByBooleanLiteral {
+  init(booleanLiteral value: Bool) {
+    self = .bool(value)
   }
 }
 

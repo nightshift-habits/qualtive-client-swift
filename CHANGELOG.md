@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Full enquiry fetch model: `theme`, `container`, `submittedPages` (with score conditions), and `isUserContactDetailsRequired`.
+- Page content types `body`, `image`, and `contactDetails`; select `allowsCustomInput`; text `storageTarget`; and score `stars5`.
+- Optional `previewToken` on `EnquiryController.fetch` for unpublished drafts.
+
 ### Changed
 
 - Dropped CocoaPods support. Swift Package Manager is the only supported installation method. 1.5.0 remains the last CocoaPods release.

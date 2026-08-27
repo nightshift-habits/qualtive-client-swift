@@ -16,11 +16,11 @@ struct EnquiryControllerTests {
       #expect(body == nil)
       return (
         jsonData(
-          [
-            "id": 6290486614556672,
-            "slug": "swift",
-            "name": "Swift?",
-            "pages": [
+          enquiryJSON(
+            id: .int64(6290486614556672),
+            slug: "swift",
+            name: "Swift?",
+            pages: [
               [
                 "content": [
                   ["type": "score", "scoreType": "smilies5"],
@@ -28,8 +28,8 @@ struct EnquiryControllerTests {
                   ["type": "text", "placeholder": "Write here…"],
                 ]
               ]
-            ],
-          ] as TestJSON
+            ]
+          )
         ),
         makeHTTPURLResponse(statusCode: 200)
       )
@@ -61,6 +61,24 @@ struct EnquiryControllerTests {
     } else {
       Issue.record("Expected text")
     }
+  }
+
+  @Test func `should append preview token to the path`() async throws {
+    let mock = MockNetworkController()
+    mock.pathHandler = { method, path, _, _, _ in
+      #expect(method == "GET")
+      #expect(path == "/feedback/enquiries/swift/?previewToken=token%20value")
+      return (
+        jsonData(enquiryJSON(slug: "swift", name: "Swift?", pages: [])),
+        makeHTTPURLResponse(statusCode: 200)
+      )
+    }
+
+    let enquiryController = EnquiryController(networkController: mock)
+    _ = try await enquiryController.fetch(
+      collection: "ci-test/swift",
+      previewToken: "token value"
+    )
   }
 
   @Test func `should throw when enquiry is not found`() async {
@@ -103,11 +121,10 @@ struct EnquiryControllerTests {
     mock.pathHandler = { _, _, _, _, _ in
       (
         jsonData(
-          [
-            "id": 1,
-            "slug": "swift",
-            "name": "Swift?",
-            "pages": [
+          enquiryJSON(
+            slug: "swift",
+            name: "Swift?",
+            pages: [
               [
                 "content": [
                   ["type": "title", "text": "Hello"],
@@ -115,8 +132,8 @@ struct EnquiryControllerTests {
                   ["type": "text", "placeholder": "Write"],
                 ]
               ]
-            ],
-          ] as TestJSON
+            ]
+          )
         ),
         makeHTTPURLResponse(statusCode: 200)
       )

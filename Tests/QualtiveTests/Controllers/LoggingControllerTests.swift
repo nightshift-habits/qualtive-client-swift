@@ -14,18 +14,15 @@ struct LoggingControllerTests {
     let enquiry = try decoder.decode(
       Enquiry.self,
       from: jsonData(
-        [
-          "id": 1,
-          "slug": "slug",
-          "name": "Name",
-          "pages": [
+        enquiryJSON(
+          pages: [
             [
               "content": [
                 ["type": "future-content-type", "key": 123]
               ]
             ]
-          ],
-        ] as TestJSON
+          ]
+        )
       )
     )
 
@@ -41,18 +38,15 @@ struct LoggingControllerTests {
     let enquiry = try decoder.decode(
       Enquiry.self,
       from: jsonData(
-        [
-          "id": 1,
-          "slug": "slug",
-          "name": "Name",
-          "pages": [
+        enquiryJSON(
+          pages: [
             [
               "content": [
                 ["type": "score", "scoreType": "future-score"]
               ]
             ]
-          ],
-        ] as TestJSON
+          ]
+        )
       )
     )
 

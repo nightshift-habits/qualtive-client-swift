@@ -6,15 +6,24 @@ extension Enquiry {
   ///
   /// Possible content kinds:
   /// - `title`: Static title to display to the user. Not user interactable.
+  /// - `body`: Static body text to display to the user. Not user interactable.
+  /// - `image`: Static image to display to the user. Not user interactable.
   /// - `score`: Score/rating input for a single value between 0 and 100.
   /// - `text`: Free-form text input. User can type whatever text he/she wants.
   /// - `select`: Single select/radio button input. User can select one of many possible pre-defined options.
   /// - `multiselect`: Multi-select/checkbox buttons input. User can select on or many of possible pre-defined options.
   /// - `attachments`: Attachments/files input.
-  public enum Content: Sendable {
+  /// - `contactDetails`: Contact details input if not given automatically.
+  public enum Content: Sendable, Decodable {
 
     /// Static title to display to the user. Not user interactable.
     case title(TitleContent)
+
+    /// Static body text to display to the user. Not user interactable.
+    case body(BodyContent)
+
+    /// Static image to display to the user. Not user interactable.
+    case image(ImageContent)
 
     /// Score/rating input for a single value between 0 and 100.
     case score(ScoreContent)
@@ -30,6 +39,9 @@ extension Enquiry {
 
     /// Attachments/files input.
     case attachments(AttachmentsContent)
+
+    /// Contact details input if not given automatically.
+    case contactDetails(ContactDetailsContent)
   }
 
   /// Static title to display to the user. Not user interactable.
@@ -40,6 +52,28 @@ extension Enquiry {
 
     public init(text: String = "") {
       self.text = text
+    }
+  }
+
+  /// Static body text to display to the user. Not user interactable.
+  public struct BodyContent: Sendable, Decodable {
+
+    /// Text of the body to display.
+    public let text: String
+
+    public init(text: String = "") {
+      self.text = text
+    }
+  }
+
+  /// Static image to display to the user. Not user interactable.
+  public struct ImageContent: Sendable, Decodable {
+
+    /// Remote image attachment.
+    public let attachment: ContentAttachment
+
+    public init(attachment: ContentAttachment) {
+      self.attachment = attachment
     }
   }
 
@@ -60,8 +94,47 @@ extension Enquiry {
     /// Placeholder to display in the text input.
     public let placeholder: String?
 
-    public init(placeholder: String? = nil) {
+    /// Where the text input is stored when posting.
+    public let storageTarget: StorageTarget
+
+    public init(
+      placeholder: String? = nil,
+      storageTarget: StorageTarget = .text
+    ) {
       self.placeholder = placeholder
+      self.storageTarget = storageTarget
+    }
+
+    /// Where text input is stored when posting.
+    public enum StorageTarget: Sendable, Equatable, Decodable {
+
+      /// Stored as entry text content.
+      case text
+
+      /// Stored as a custom attribute.
+      case attribute(String)
+
+      private enum CodingKeys: String, CodingKey {
+        case type
+        case attribute
+      }
+
+      public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+        switch type {
+        case "text":
+          self = .text
+        case "attribute":
+          self = .attribute(try container.decode(String.self, forKey: .attribute))
+        default:
+          throw DecodingError.dataCorruptedError(
+            forKey: .type,
+            in: container,
+            debugDescription: "Unknown storageTarget type: \(type)"
+          )
+        }
+      }
     }
   }
 
@@ -71,8 +144,12 @@ extension Enquiry {
     /// Possible options to select.
     public let options: [String]
 
-    public init(options: [String] = []) {
+    /// When `true`, the user may enter a custom value instead of a predefined option.
+    public let allowsCustomInput: Bool
+
+    public init(options: [String] = [], allowsCustomInput: Bool = false) {
       self.options = options
+      self.allowsCustomInput = allowsCustomInput
     }
   }
 
@@ -92,12 +169,37 @@ extension Enquiry {
 
     public init() {}
   }
+
+  /// Contact details input if not given automatically.
+  public struct ContactDetailsContent: Sendable, Decodable {
+
+    /// Title shown above the contact details field.
+    public let title: String
+
+    /// Placeholder shown in the contact details field.
+    public let placeholder: String?
+
+    public init(title: String = "", placeholder: String? = nil) {
+      self.title = title
+      self.placeholder = placeholder
+    }
+  }
+
+  /// Remote attachment referenced by enquiry content.
+  public struct ContentAttachment: Sendable, Decodable, Equatable {
+
+    /// Remote URL to the attachment.
+    public let url: String
+
+    public init(url: String) {
+      self.url = url
+    }
+  }
 }
 
-/// Decodes a single content object, returning `nil` for unknown or unsupported types.
-struct ContentBox: Decodable {
+extension Enquiry.Content {
 
-  enum CodingKeys: String, CodingKey {
+  fileprivate enum CodingKeys: String, CodingKey {
     case type
     case text
     case scoreType
@@ -105,52 +207,62 @@ struct ContentBox: Decodable {
     case trailingText
     case placeholder
     case options
+    case allowsCustomInput
+    case storageTarget
+    case attachment
+    case title
   }
 
-  let value: Enquiry.Content?
-
-  init(from decoder: Decoder) throws {
-    let loggingController =
-      (decoder.userInfo[CodingUserInfoKey.loggingController] as? any LoggingControllerType)
-      ?? LoggingController()
+  public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     let type = try container.decode(String.self, forKey: .type)
 
     switch type {
     case "title":
       let text = try container.decode(String.self, forKey: .text)
-      value = .title(.init(text: text))
+      self = .title(.init(text: text))
+    case "body":
+      let text = try container.decode(String.self, forKey: .text)
+      self = .body(.init(text: text))
+    case "image":
+      let attachment = try container.decode(Enquiry.ContentAttachment.self, forKey: .attachment)
+      self = .image(.init(attachment: attachment))
     case "score":
-      guard let kind = try Score.Kind(from: container, loggingController: loggingController)
-      else {
-        value = nil
-        return
+      guard let kind = try Score.Kind(from: container) else {
+        try throwUnknownAPIValue(decoder)
       }
-      value = .score(.init(kind: kind))
+      self = .score(.init(kind: kind))
     case "text":
       let placeholder = try container.decodeIfPresent(String.self, forKey: .placeholder)
-      value = .text(.init(placeholder: placeholder))
+      let storageTarget =
+        try container.decodeIfPresent(
+          Enquiry.TextContent.StorageTarget.self,
+          forKey: .storageTarget
+        ) ?? .text
+      self = .text(.init(placeholder: placeholder, storageTarget: storageTarget))
     case "select":
       let options = try container.decode([String].self, forKey: .options)
-      value = .select(.init(options: options))
+      let allowsCustomInput =
+        try container.decodeIfPresent(Bool.self, forKey: .allowsCustomInput) ?? false
+      self = .select(.init(options: options, allowsCustomInput: allowsCustomInput))
     case "multiselect":
       let options = try container.decode([String].self, forKey: .options)
-      value = .multiselect(.init(options: options))
+      self = .multiselect(.init(options: options))
     case "attachments":
-      value = .attachments(.init())
+      self = .attachments(.init())
+    case "contactDetails":
+      let title = try container.decode(String.self, forKey: .title)
+      let placeholder = try container.decodeIfPresent(String.self, forKey: .placeholder)
+      self = .contactDetails(.init(title: title, placeholder: placeholder))
     default:
-      loggingController.logHintNewVersion()
-      value = nil
+      try throwUnknownAPIValue(decoder)
     }
   }
 }
 
 extension Score.Kind {
 
-  fileprivate init?(
-    from container: KeyedDecodingContainer<ContentBox.CodingKeys>,
-    loggingController: any LoggingControllerType
-  ) throws {
+  fileprivate init?(from container: KeyedDecodingContainer<Enquiry.Content.CodingKeys>) throws {
     let type = try container.decode(String.self, forKey: .scoreType)
     switch type {
     case "smilies5":
@@ -164,8 +276,9 @@ extension Score.Kind {
         leadingText: try container.decodeIfPresent(String.self, forKey: .leadingText) ?? "",
         trailingText: try container.decodeIfPresent(String.self, forKey: .trailingText) ?? ""
       )
+    case "stars5":
+      self = .stars5
     default:
-      loggingController.logHintNewVersion()
       return nil
     }
   }
