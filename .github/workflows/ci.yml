@@ -57,5 +57,4 @@ jobs:
           -scheme Qualtive
           -destination '${{ matrix.destination }}'
           -derivedDataPath .derivedData
-          -quiet
           COMPILER_INDEX_STORE_ENABLE=NO
