@@ -17,6 +17,17 @@ struct EnquiryFetchIntegrationTests {
     #expect(enquiry.theme.cornerStyle == .rounded || enquiry.theme.cornerStyle == .square)
   }
 
+  @Test func `should fetch an enquiry with a workspace`() async throws {
+    let enquiry = try await EnquiryController().fetch(collection: "ci-test/ci-test-2/swift-2")
+
+    #expect(enquiry.slug == "swift-2")
+    #expect(enquiry.id > 0)
+    #expect(!enquiry.pages.isEmpty)
+    #expect(!enquiry.submittedPages.isEmpty)
+    #expect(enquiry.container.id == "ci-test")
+    #expect(enquiry.theme.cornerStyle == .rounded || enquiry.theme.cornerStyle == .square)
+  }
+
   @Test func `should throw when enquiry is not found`() async {
     await #expect {
       _ = try await EnquiryController().fetch(collection: "ci-test/not-found")

@@ -20,6 +20,8 @@ https://github.com/nightshift-habits/qualtive-client-swift.git
 
 First of all, make sure you have created an enquiry on [qualtive.io](https://qualtive.io). Each feedback entry is posted to a so called collection (container ID + enquiry ID or slug) which can be found on the enquiry page.
 
+Optionally include a workspace slug between the container and enquiry (`"container/workspace/enquiry"`). When omitted, the user API uses the container's default workspace.
+
 To post a feedback entry, use `PostController`. For example:
 
 ```swift
@@ -30,6 +32,17 @@ let entry = try await PostController().post(
   content: [
     .score(.init(value: 75)), // Must be equal or between 0 and 100
     .text(.init(value: "Hello world!")),
+  ]
+)
+```
+
+With a workspace:
+
+```swift
+try await PostController().post(
+  to: "my-company/my-department/my-enquiry",
+  content: [
+    .score(.init(value: 75)),
   ]
 )
 ```
@@ -137,7 +150,8 @@ Attachments (for example from the photo picker or a file URL) upload first, then
 ```swift
 let image = try await AttachmentController().create(
   from: .data(pngData, contentType: .png),
-  to: "my-company"
+  to: "my-company",
+  workspaceId: "my-department"
 )
 let video = try await AttachmentController().create(
   from: .file(fileURL, contentType: "video/mp4"),

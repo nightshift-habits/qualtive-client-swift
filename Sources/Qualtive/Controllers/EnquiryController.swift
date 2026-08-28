@@ -61,6 +61,7 @@ public struct EnquiryController: EnquiryControllerType {
         method: "GET",
         path: enquiryPath(enquiryId: collection.enquiryId, previewToken: previewToken),
         containerId: collection.containerId.rawValue,
+        workspaceId: collection.workspaceId?.rawValue,
         headers: [
           "Accept-Language": locale.identifier.replacingOccurrences(of: "_", with: "-")
         ]

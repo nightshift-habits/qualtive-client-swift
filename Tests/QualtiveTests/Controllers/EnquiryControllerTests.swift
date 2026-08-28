@@ -8,10 +8,11 @@ struct EnquiryControllerTests {
 
   @Test func `should fetch an enquiry`() async throws {
     let mock = MockNetworkController()
-    mock.pathHandler = { method, path, containerId, headers, body in
+    mock.pathHandler = { method, path, containerId, workspaceId, headers, body in
       #expect(method == "GET")
       #expect(path == "/feedback/enquiries/swift/")
       #expect(containerId == "ci-test")
+      #expect(workspaceId == nil)
       #expect(headers["Accept-Language"] == "en-US")
       #expect(body == nil)
       return (
@@ -65,7 +66,7 @@ struct EnquiryControllerTests {
 
   @Test func `should append preview token to the path`() async throws {
     let mock = MockNetworkController()
-    mock.pathHandler = { method, path, _, _, _ in
+    mock.pathHandler = { method, path, _, _, _, _ in
       #expect(method == "GET")
       #expect(path == "/feedback/enquiries/swift/?previewToken=token%20value")
       return (
@@ -83,7 +84,7 @@ struct EnquiryControllerTests {
 
   @Test func `should throw when enquiry is not found`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 404))
     }
 
@@ -100,7 +101,7 @@ struct EnquiryControllerTests {
 
   @Test func `should throw on connection error`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       throw URLError(.notConnectedToInternet)
     }
 
@@ -118,7 +119,7 @@ struct EnquiryControllerTests {
 
   @Test func `should skip unknown content types`() async throws {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (
         jsonData(
           enquiryJSON(
@@ -142,5 +143,20 @@ struct EnquiryControllerTests {
     let enquiryController = EnquiryController(networkController: mock)
     let enquiry = try await enquiryController.fetch(collection: "ci-test/swift")
     #expect(enquiry.pages[0].content.count == 2)
+  }
+
+  @Test func `should pass workspace id when set`() async throws {
+    let mock = MockNetworkController()
+    mock.pathHandler = { _, _, containerId, workspaceId, _, _ in
+      #expect(containerId == "ci-test")
+      #expect(workspaceId == "my-department")
+      return (
+        jsonData(enquiryJSON(slug: "swift", name: "Swift?", pages: [])),
+        makeHTTPURLResponse(statusCode: 200)
+      )
+    }
+
+    let enquiryController = EnquiryController(networkController: mock)
+    _ = try await enquiryController.fetch(collection: "ci-test/my-department/swift")
   }
 }

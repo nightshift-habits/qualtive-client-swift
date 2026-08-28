@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Optional workspace slug on `Collection` (between container and enquiry) and `AttachmentController.create`, sent as the `X-Workspace` header.
 - Full enquiry fetch model: `theme`, `container`, `submittedPages` (with score conditions), and `isUserContactDetailsRequired`.
 - Page content types `body`, `image`, and `contactDetails`; select `allowsCustomInput`; text `storageTarget`; and score `stars5`.
 - Optional `previewToken` on `EnquiryController.fetch` for unpublished drafts.

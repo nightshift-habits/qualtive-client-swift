@@ -9,10 +9,11 @@ struct AttachmentControllerTests {
   @Test func `should create an attachment`() async throws {
     let uploadURL = URL(string: "https://uploads.example/put")!
     let mock = MockNetworkController()
-    mock.pathHandler = { method, path, containerId, headers, body in
+    mock.pathHandler = { method, path, containerId, workspaceId, headers, body in
       #expect(method == "POST")
       #expect(path == "/feedback/attachments/")
       #expect(containerId == "ci-test")
+      #expect(workspaceId == nil)
       let request = decodeJSON(CreateAttachmentBody.self, from: body!)
       #expect(request.contentType == "image/png")
       return (
@@ -24,6 +25,7 @@ struct AttachmentControllerTests {
       #expect(method == "PUT")
       #expect(url == uploadURL)
       #expect(headers["Content-Type"] == "image/png")
+      #expect(headers["X-Workspace"] == nil)
       #expect(body == Data([0x89, 0x50]))
       return (Data(), makeHTTPURLResponse(url: uploadURL, statusCode: 200))
     }
@@ -41,7 +43,7 @@ struct AttachmentControllerTests {
   @Test func `should create a jpeg attachment`() async throws {
     let uploadURL = URL(string: "https://uploads.example/put")!
     let mock = MockNetworkController()
-    mock.pathHandler = { method, path, containerId, headers, body in
+    mock.pathHandler = { method, path, containerId, _, headers, body in
       #expect(method == "POST")
       let request = decodeJSON(CreateAttachmentBody.self, from: body!)
       #expect(request.contentType == "image/jpeg")
@@ -65,7 +67,7 @@ struct AttachmentControllerTests {
 
   @Test func `should throw when the upload url is invalid`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (
         jsonData(CreatedAttachmentBody(id: 1, uploadUrl: "")),
         makeHTTPURLResponse(statusCode: 200)
@@ -90,7 +92,7 @@ struct AttachmentControllerTests {
 
   @Test func `should throw when the create step fails`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 503))
     }
 
@@ -113,7 +115,7 @@ struct AttachmentControllerTests {
   @Test func `should throw remote maintenance when the put step returns 503`() async {
     let uploadURL = URL(string: "https://uploads.example/put")!
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (
         jsonData(CreatedAttachmentBody(id: 1, uploadUrl: uploadURL.absoluteString)),
         makeHTTPURLResponse(statusCode: 200)
@@ -142,7 +144,7 @@ struct AttachmentControllerTests {
   @Test func `should throw when the put step fails`() async {
     let uploadURL = URL(string: "https://uploads.example/put")!
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (
         jsonData(CreatedAttachmentBody(id: 1, uploadUrl: uploadURL.absoluteString)),
         makeHTTPURLResponse(statusCode: 200)
@@ -170,7 +172,7 @@ struct AttachmentControllerTests {
 
   @Test func `should throw on connection error`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       throw URLError(.timedOut)
     }
 
@@ -193,7 +195,7 @@ struct AttachmentControllerTests {
   @Test func `should upload an arbitrary mime type`() async throws {
     let uploadURL = URL(string: "https://uploads.example/put")!
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, body in
+    mock.pathHandler = { _, _, _, _, _, body in
       let request = decodeJSON(CreateAttachmentBody.self, from: body!)
       #expect(request.contentType == "application/pdf")
       return (
@@ -224,7 +226,7 @@ struct AttachmentControllerTests {
     defer { try? FileManager.default.removeItem(at: fileURL) }
 
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, body in
+    mock.pathHandler = { _, _, _, _, _, body in
       let request = decodeJSON(CreateAttachmentBody.self, from: body!)
       #expect(request.contentType == "video/mp4")
       return (
@@ -248,7 +250,7 @@ struct AttachmentControllerTests {
 
   @Test func `should throw when the file url is not a file url`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (
         jsonData(
           CreatedAttachmentBody(id: 1, uploadUrl: "https://uploads.example/put")
@@ -271,6 +273,32 @@ struct AttachmentControllerTests {
       }
       return true
     }
+  }
+
+  @Test func `should pass workspace id on create and omit it on upload`() async throws {
+    let uploadURL = URL(string: "https://uploads.example/put")!
+    let mock = MockNetworkController()
+    mock.pathHandler = { _, _, containerId, workspaceId, _, _ in
+      #expect(containerId == "ci-test")
+      #expect(workspaceId == "my-department")
+      return (
+        jsonData(CreatedAttachmentBody(id: 7, uploadUrl: uploadURL.absoluteString)),
+        makeHTTPURLResponse(statusCode: 200)
+      )
+    }
+    mock.urlHandler = { _, _, headers, _ in
+      #expect(headers["X-Workspace"] == nil)
+      #expect(headers["X-Container"] == nil)
+      return (Data(), makeHTTPURLResponse(url: uploadURL, statusCode: 200))
+    }
+
+    let attachmentController = AttachmentController(networkController: mock)
+    let attachment = try await attachmentController.create(
+      from: .data(Data([0x01]), contentType: .png),
+      to: "ci-test",
+      workspaceId: "my-department"
+    )
+    #expect(attachment.id == 7)
   }
 }
 

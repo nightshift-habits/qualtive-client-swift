@@ -9,6 +9,7 @@ final class MockNetworkController: NetworkControllerType, @unchecked Sendable {
     let path: String?
     let url: URL?
     let containerId: String?
+    let workspaceId: String?
     let headers: [String: String]
     let body: Data?
   }
@@ -17,7 +18,7 @@ final class MockNetworkController: NetworkControllerType, @unchecked Sendable {
 
   var pathHandler:
     (
-      @Sendable (String, String, String, [String: String], Data?) async throws -> (
+      @Sendable (String, String, String, String?, [String: String], Data?) async throws -> (
         Data, HTTPURLResponse
       )
     )?
@@ -28,6 +29,7 @@ final class MockNetworkController: NetworkControllerType, @unchecked Sendable {
     method: String,
     path: String,
     containerId: String,
+    workspaceId: String?,
     headers: [String: String],
     body: Data?
   ) async throws -> (Data, HTTPURLResponse) {
@@ -37,6 +39,7 @@ final class MockNetworkController: NetworkControllerType, @unchecked Sendable {
         path: path,
         url: nil,
         containerId: containerId,
+        workspaceId: workspaceId,
         headers: headers,
         body: body
       )
@@ -47,7 +50,7 @@ final class MockNetworkController: NetworkControllerType, @unchecked Sendable {
       )
     }
     do {
-      return try await pathHandler(method, path, containerId, headers, body)
+      return try await pathHandler(method, path, containerId, workspaceId, headers, body)
     } catch is CancellationError {
       throw CancellationError()
     } catch let error as NetworkError {
@@ -69,6 +72,7 @@ final class MockNetworkController: NetworkControllerType, @unchecked Sendable {
         path: nil,
         url: url,
         containerId: nil,
+        workspaceId: nil,
         headers: headers,
         body: body
       )

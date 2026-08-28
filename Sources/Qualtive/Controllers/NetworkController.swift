@@ -25,6 +25,7 @@ package protocol NetworkControllerType: Sendable {
     method: String,
     path: String,
     containerId: String,
+    workspaceId: String?,
     headers: [String: String],
     body: Data?
   ) async throws -> (Data, HTTPURLResponse)
@@ -80,6 +81,7 @@ extension NetworkControllerType {
     method: String,
     path: String,
     containerId: String,
+    workspaceId: String? = nil,
     headers: [String: String] = [:],
     body: Data? = nil
   ) async throws -> Response {
@@ -87,6 +89,7 @@ extension NetworkControllerType {
       method: method,
       path: path,
       containerId: containerId,
+      workspaceId: workspaceId,
       headers: headers,
       body: body
     )
@@ -97,6 +100,7 @@ extension NetworkControllerType {
     method: String,
     path: String,
     containerId: String,
+    workspaceId: String? = nil,
     headers: [String: String] = [:],
     body: Body
   ) async throws -> Response {
@@ -115,6 +119,7 @@ extension NetworkControllerType {
       method: method,
       path: path,
       containerId: containerId,
+      workspaceId: workspaceId,
       headers: headers,
       body: bodyData
     )
@@ -124,6 +129,7 @@ extension NetworkControllerType {
     method: String,
     path: String,
     containerId: String,
+    workspaceId: String?,
     headers: [String: String],
     body: Data?
   ) async throws -> Response {
@@ -134,6 +140,7 @@ extension NetworkControllerType {
         method: method,
         path: path,
         containerId: containerId,
+        workspaceId: workspaceId,
         headers: headers,
         body: body
       )
@@ -191,6 +198,7 @@ package struct NetworkController: NetworkControllerType {
     method: String,
     path: String,
     containerId: String,
+    workspaceId: String?,
     headers: [String: String],
     body: Data?
   ) async throws -> (Data, HTTPURLResponse) {
@@ -199,6 +207,9 @@ package struct NetworkController: NetworkControllerType {
 
     var requestHeaders = headers
     requestHeaders["X-Container"] = containerId
+    if let workspaceId {
+      requestHeaders["X-Workspace"] = workspaceId
+    }
 
     return try await send(
       method: method,

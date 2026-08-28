@@ -12,7 +12,7 @@ struct NetworkControllerTests {
 
   @Test func `should send and decode a successful response`() async throws {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (jsonData(["id": 42] as TestJSON), makeHTTPURLResponse(statusCode: 200))
     }
 
@@ -27,7 +27,7 @@ struct NetworkControllerTests {
 
   @Test func `should throw when response JSON is invalid`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       ("not-json".data(using: .utf8)!, makeHTTPURLResponse(statusCode: 200))
     }
 
@@ -47,7 +47,7 @@ struct NetworkControllerTests {
 
   @Test func `should throw not found for 404`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 404))
     }
 
@@ -67,7 +67,7 @@ struct NetworkControllerTests {
 
   @Test func `should throw remote maintenance for 503`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 503))
     }
 
@@ -87,7 +87,7 @@ struct NetworkControllerTests {
 
   @Test func `should throw unexpected for other status codes`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 500))
     }
 
@@ -107,7 +107,7 @@ struct NetworkControllerTests {
 
   @Test func `should throw connection error`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       throw URLError(.notConnectedToInternet)
     }
 
@@ -138,6 +138,7 @@ struct NetworkControllerTests {
       #expect(request.url?.absoluteString == "https://example.test/feedback/enquiries/swift/")
       #expect(request.httpMethod == "GET")
       #expect(request.value(forHTTPHeaderField: "X-Container") == "ci-test")
+      #expect(request.value(forHTTPHeaderField: "X-Workspace") == nil)
       #expect(request.value(forHTTPHeaderField: "Accept-Language") == "en-US")
       #expect(request.httpBodyStream == nil && request.httpBody == nil)
 
@@ -161,6 +162,37 @@ struct NetworkControllerTests {
       headers: ["Accept-Language": "en-US"]
     )
     #expect(enquiry.slug == "swift")
+  }
+
+  @Test func `should send workspace header when workspace id is set`() async throws {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [RecordingURLProtocol.self]
+    let session = URLSession(configuration: configuration)
+    let networkController = NetworkController(
+      urlSession: session,
+      baseURL: URL(string: "https://example.test/")!
+    )
+
+    RecordingURLProtocol.handler = { request in
+      #expect(request.value(forHTTPHeaderField: "X-Container") == "ci-test")
+      #expect(request.value(forHTTPHeaderField: "X-Workspace") == "my-department")
+      let response = HTTPURLResponse(
+        url: request.url!,
+        statusCode: 200,
+        httpVersion: nil,
+        headerFields: nil
+      )!
+      return (jsonData(["id": 1] as TestJSON), response)
+    }
+    defer { RecordingURLProtocol.handler = nil }
+
+    let result: SampleResponse = try await networkController.send(
+      method: "GET",
+      path: "/feedback/enquiries/swift/",
+      containerId: "ci-test",
+      workspaceId: "my-department"
+    )
+    #expect(result.id == 1)
   }
 
   @Test func `should send a path without a leading slash`() async throws {

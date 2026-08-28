@@ -8,12 +8,32 @@ struct CollectionTests {
   @Test func `should parse a string literal`() {
     let collection: Collection = "ci-test/swift"
     #expect(collection.containerId == "ci-test")
+    #expect(collection.workspaceId == nil)
     #expect(collection.enquiryId == "swift")
+  }
+
+  @Test func `should parse a string literal with a workspace`() {
+    let collection: Collection = "ci-test/my-department/swift"
+    #expect(collection.containerId.rawValue == "ci-test")
+    #expect(collection.workspaceId?.rawValue == "my-department")
+    #expect(collection.enquiryId.rawValue == "swift")
   }
 
   @Test func `should initialize with typed ids`() {
     let collection = Collection(containerId: "ci-test", enquiryId: "swift")
     #expect(collection.containerId.rawValue == "ci-test")
+    #expect(collection.workspaceId == nil)
+    #expect(collection.enquiryId.rawValue == "swift")
+  }
+
+  @Test func `should initialize with a workspace id between container and enquiry`() {
+    let collection = Collection(
+      containerId: "ci-test",
+      workspaceId: "my-department",
+      enquiryId: "swift"
+    )
+    #expect(collection.containerId.rawValue == "ci-test")
+    #expect(collection.workspaceId?.rawValue == "my-department")
     #expect(collection.enquiryId.rawValue == "swift")
   }
 
@@ -39,8 +59,10 @@ struct CollectionTests {
     let a: Collection = "a/b"
     let b: Collection = "a/b"
     let c: Collection = "a/c"
+    let d: Collection = "a/ws/b"
     #expect(a == b)
     #expect(a != c)
+    #expect(a != d)
   }
 
   @Test func `should parse a string literal with a separator`() {
@@ -53,6 +75,7 @@ struct CollectionTests {
 
   @Test func `should describe typed ids`() {
     #expect(ContainerId("ci-test").description == "ci-test")
+    #expect(WorkspaceId("my-department").description == "my-department")
     #expect(EnquiryId("swift").description == "swift")
   }
 

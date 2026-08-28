@@ -6,8 +6,19 @@ public protocol AttachmentControllerType: Sendable {
   /// - Throws: `UploadError`, or `CancellationError` when cancelled.
   func create(
     from upload: Attachment.Upload,
-    to containerId: ContainerId
+    to containerId: ContainerId,
+    workspaceId: WorkspaceId?
   ) async throws -> Attachment
+}
+
+extension AttachmentControllerType {
+
+  public func create(
+    from upload: Attachment.Upload,
+    to containerId: ContainerId
+  ) async throws -> Attachment {
+    try await create(from: upload, to: containerId, workspaceId: nil)
+  }
 }
 
 /// Live attachment upload controller.
@@ -29,7 +40,8 @@ public struct AttachmentController: AttachmentControllerType {
 
   public func create(
     from upload: Attachment.Upload,
-    to containerId: ContainerId
+    to containerId: ContainerId,
+    workspaceId: WorkspaceId? = nil
   ) async throws -> Attachment {
     let created: CreatedAttachment
     do {
@@ -37,6 +49,7 @@ public struct AttachmentController: AttachmentControllerType {
         method: "POST",
         path: "/feedback/attachments/",
         containerId: containerId.rawValue,
+        workspaceId: workspaceId?.rawValue,
         body: CreateAttachmentRequest(contentType: contentType(of: upload).mimeType)
       )
     } catch let error as NetworkError {

@@ -225,6 +225,7 @@ public struct PostController: PostControllerType {
         method: "POST",
         path: "/feedback/entries/",
         containerId: collection.containerId.rawValue,
+        workspaceId: collection.workspaceId?.rawValue,
         body: request
       )
     } catch let error as NetworkError {

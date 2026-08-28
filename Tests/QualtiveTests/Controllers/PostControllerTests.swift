@@ -8,10 +8,11 @@ struct PostControllerTests {
 
   @Test func `should post an entry`() async throws {
     let mock = MockNetworkController()
-    mock.pathHandler = { method, path, containerId, headers, body in
+    mock.pathHandler = { method, path, containerId, workspaceId, headers, body in
       #expect(method == "POST")
       #expect(path == "/feedback/entries/")
       #expect(containerId == "ci-test")
+      #expect(workspaceId == nil)
       #expect(headers["Content-Type"] == "application/json; charset=utf-8")
 
       let posted = decodeJSON(PostedEntryBody.self, from: body!)
@@ -49,7 +50,7 @@ struct PostControllerTests {
 
   @Test func `should post with a user`() async throws {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, body in
+    mock.pathHandler = { _, _, _, _, _, body in
       let posted = decodeJSON(PostedEntryBody.self, from: body!)
       #expect(posted.user.id == "user-1")
       #expect(posted.user.name == "Ada")
@@ -72,7 +73,7 @@ struct PostControllerTests {
 
   @Test func `should post attribute-targeted text as attributes`() async throws {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, body in
+    mock.pathHandler = { _, _, _, _, _, body in
       let posted = decodeJSON(PostedEntryBody.self, from: body!)
       #expect(posted.content.count == 2)
       #expect(posted.content[0].type == "score")
@@ -115,7 +116,7 @@ struct PostControllerTests {
 
   @Test func `should omit device attributes and client id when options deny them`() async throws {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, body in
+    mock.pathHandler = { _, _, _, _, _, body in
       let posted = decodeJSON(PostedEntryBody.self, from: body!)
       #expect(posted.attributes["Platform"] == nil)
       #expect(posted.attributes["Age"] == "32")
@@ -146,7 +147,7 @@ struct PostControllerTests {
 
   @Test func `should throw when enquiry is not found`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       (Data(), makeHTTPURLResponse(statusCode: 404))
     }
 
@@ -166,7 +167,7 @@ struct PostControllerTests {
 
   @Test func `should throw on connection error`() async {
     let mock = MockNetworkController()
-    mock.pathHandler = { _, _, _, _, _ in
+    mock.pathHandler = { _, _, _, _, _, _ in
       throw URLError(.notConnectedToInternet)
     }
 
@@ -183,6 +184,25 @@ struct PostControllerTests {
       }
       return true
     }
+  }
+
+  @Test func `should pass workspace id when set`() async throws {
+    let mock = MockNetworkController()
+    mock.pathHandler = { _, _, containerId, workspaceId, _, _ in
+      #expect(containerId == "ci-test")
+      #expect(workspaceId == "my-department")
+      return (jsonData(EntryIDResponse(id: 1)), makeHTTPURLResponse(statusCode: 200))
+    }
+
+    let postController = PostController(
+      networkController: mock,
+      standardAttributesController: MockStandardAttributesController(attributes: [:]),
+      userClientIDController: MockUserClientIDController(clientId: "test-client-id")
+    )
+    _ = try await postController.post(
+      to: "ci-test/my-department/swift",
+      content: [.text(.init(value: "Hello"))]
+    )
   }
 }
 

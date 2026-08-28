@@ -23,6 +23,23 @@ struct EntryPostIntegrationTests {
     #expect(entry.id > 0)
   }
 
+  @Test func `should post an entry with a workspace`() async throws {
+    let entry = try await PostController()
+      .post(
+        to: "ci-test/ci-test-2/swift-2",
+        content: [
+          .score(.init(value: 75)),
+          .text(.init(value: "Hello world!")),
+          .select(.init(value: "Selected")),
+          .multiselect(.init(values: ["Multi 1", "Multi 2"])),
+        ],
+        user: User(id: "ci-swift"),
+        customAttributes: ["Age": "23"]
+      )
+
+    #expect(entry.id > 0)
+  }
+
   @Test func `should throw when enquiry is not found`() async {
     await #expect {
       _ = try await PostController()
